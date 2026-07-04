@@ -1,0 +1,135 @@
+
+# =============================================================================
+#  CyberSim — Ethical Attack Simulator
+#  ALL services run on an ISOLATED bridge network. Attacks are only ever
+#  launched against the containers defined here. No external routing.
+# =============================================================================
+
+services:
+  # --------------------------------------------------------------------- DB
+  db:
+    image: postgres:16-alpine
+    container_name: cybersim-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cybersim}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cybersim}
+      POSTGRES_DB: ${POSTGRES_DB:-cybersim}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - cybersim-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cybersim}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # --------------------------------------------------------------- BACKEND
+  backend:
+    build: ./backend
+    container_name: cybersim-backend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cybersim}:${POSTGRES_PASSWORD:-cybersim}@db:5432/${POSTGRES_DB:-cybersim}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cybersim-net
+    healthcheck:
+      # No curl in the slim image — use Python's stdlib to hit /health.
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # ------------------------------------------------------------- DASHBOARD
+  dashboard:
+    build: ./dashboard
+    container_name: cybersim-dashboard
+    restart: unless-stopped
+    environment:
+      # Vite reads these at build/runtime; point the browser at the backend.
+      VITE_API_URL: http://localhost:8000
+      VITE_WS_URL: ws://localhost:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - cybersim-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5173/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # =========================================================================
+  #  VULNERABLE TARGETS  (intentionally insecure — lab use only)
+  # =========================================================================
+
+  # DVWA — Damn Vulnerable Web Application (SQLi, XSS, brute force, etc.)
+  dvwa:
+    image: vulnerables/web-dvwa:latest
+    container_name: cybersim-dvwa
+    restart: unless-stopped
+    ports:
+      - "4280:80"
+    networks:
+      - cybersim-net
+    healthcheck:
+      test: ["CMD-SHELL", "bash -lc 'echo >/dev/tcp/127.0.0.1/80'"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  # Custom intentionally-vulnerable Node.js API
+  vuln-node-api:
+    build: ./targets/vulnerable-node-api
+    container_name: cybersim-vuln-node
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    networks:
+      - cybersim-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  # Weak SSH server (password auth, trivial credentials)
+  weak-ssh:
+    build: ./targets/weak-ssh
+    container_name: cybersim-weak-ssh
+    restart: unless-stopped
+    ports:
+      - "2222:22"
+    networks:
+      - cybersim-net
+    healthcheck:
+      # busybox pidof ships in the alpine base image.
+      test: ["CMD-SHELL", "pidof sshd || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+networks:
+  cybersim-net:
+    driver: bridge
+    name: cybersim-net
+
+volumes:
+  db-data:
