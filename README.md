@@ -33,6 +33,11 @@ network. It never touches external systems.
 - `/api/defense/playbooks` endpoint for reusable detection guidance.
 - PDF reports now include a SOC Detection Playbook section.
 - New guided scenario: **Incident Response Drill**, built for analyst demos.
+- New target: **OWASP Juice Shop** at `http://localhost:3002`.
+- New two-face dashboard view: vulnerable app + attack/detection console.
+- New industry-tool modules: `sqlmap_juice` and `hydra_bruteforce`.
+- New manual toolbox container: `cybersim-attacker-tools` with `sqlmap`,
+  `hydra`, `nmap`, `curl`, and `jq`.
 - Smaller Docker build contexts via service-level `.dockerignore` files.
 
 ---
@@ -62,8 +67,18 @@ Then open:
 | **Dashboard** | http://localhost:5173 |
 | Backend API / docs | http://localhost:8000/docs |
 | DVWA | http://localhost:4280 |
+| OWASP Juice Shop | http://localhost:3002 |
 | Vulnerable Node API | http://localhost:3001 |
 | Weak SSH | `ssh labuser@localhost -p 2222` (pw: `password123`) |
+
+Manual pentest toolbox:
+
+```bash
+docker exec -it cybersim-attacker-tools bash
+```
+
+Inside that container, targets are addressed by Docker service name, for example
+`juice-shop:3000`, `vuln-node-api:3001`, and `weak-ssh:22`.
 
 The AI Explainer and SecureWatch forwarding are **optional** — leave the keys
 blank in `.env` and CyberSim uses its built-in offline explanations and skips
@@ -135,6 +150,8 @@ SIEM saw the attack in real time. The same ID is printed in the PDF report.
 | `xss` | vuln-node-api | T1059.007 | Reflected-XSS detection |
 | `port_scan` | any lab host | T1046 | Nmap with TCP-connect fallback |
 | `ddos_sim` | any lab host | T1498 | **Hard-capped** low-rate load test (≤200 req, ≤20 concurrent) |
+| `sqlmap_juice` | juice-shop | T1190 | Conservative sqlmap profile against OWASP Juice Shop |
+| `hydra_bruteforce` | weak-ssh / juice-shop | T1110 | Hydra credential audit with bounded local wordlists |
 
 ---
 

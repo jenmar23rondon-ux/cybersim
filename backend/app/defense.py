@@ -118,6 +118,46 @@ PLAYBOOKS: dict[str, dict[str, Any]] = {
             "Use load shedding and upstream DDoS protection for public services.",
         ],
     },
+    "sqlmap_juice": {
+        "severity": "high",
+        "business_impact": "Automated SQL injection tooling can quickly confirm and enumerate vulnerable data paths.",
+        "detections": [
+            "Requests with sqlmap-like user agents or timing patterns.",
+            "Repeated encoded payloads against the same query parameter.",
+            "Database error patterns after automated parameter testing.",
+        ],
+        "securewatch_query": 'source="CyberSim" attack_type="sqlmap_juice" tool="sqlmap"',
+        "triage": [
+            "Identify the parameter sqlmap tested and the endpoint owner.",
+            "Review whether the scanner confirmed DBMS or injectable behavior.",
+            "Check if the same source touched authentication or admin endpoints.",
+        ],
+        "remediation": [
+            "Parameterize all SQL statements behind the endpoint.",
+            "Add WAF signatures for automated injection scanners.",
+            "Add request throttling and alert on repeated encoded payloads.",
+        ],
+    },
+    "hydra_bruteforce": {
+        "severity": "high",
+        "business_impact": "Automated credential guessing can lead to account compromise when weak passwords exist.",
+        "detections": [
+            "Many login attempts with different credential pairs.",
+            "Successful login after repeated failed attempts.",
+            "Hydra-like connection cadence against SSH or web login routes.",
+        ],
+        "securewatch_query": 'source="CyberSim" attack_type="hydra_bruteforce" tool="hydra"',
+        "triage": [
+            "Confirm which account and protocol were targeted.",
+            "Look for success markers after failed login bursts.",
+            "Check whether the same credentials are reused elsewhere.",
+        ],
+        "remediation": [
+            "Enable MFA, lockout, and progressive delays.",
+            "Disable password SSH where possible and use keys.",
+            "Rotate weak/default credentials in lab and production baselines.",
+        ],
+    },
 }
 
 

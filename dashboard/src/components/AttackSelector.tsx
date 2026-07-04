@@ -9,8 +9,8 @@ interface Props {
 export function AttackSelector({ modules, selected, onSelect }: Props) {
   return (
     <div className="panel">
-      <h2>1 · Select Attack</h2>
-      {modules.length === 0 && <p className="muted">Loading modules…</p>}
+      <h2>1. Select Attack</h2>
+      {modules.length === 0 && <p className="muted">Loading modules...</p>}
       {modules.map((m) => (
         <button
           key={m.id}

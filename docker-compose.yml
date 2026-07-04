@@ -109,6 +109,22 @@ services:
       retries: 6
       start_period: 10s
 
+  # OWASP Juice Shop: standard vulnerable web app for the "target face" demo.
+  juice-shop:
+    image: bkimminich/juice-shop:latest
+    container_name: cybersim-juice-shop
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    networks:
+      - cybersim-net
+    healthcheck:
+      test: ["CMD", "/nodejs/bin/node", "-e", "require('http').get('http://127.0.0.1:3000', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   # Weak SSH server (password auth, trivial credentials)
   weak-ssh:
     build: ./targets/weak-ssh
@@ -125,6 +141,22 @@ services:
       timeout: 5s
       retries: 6
       start_period: 10s
+
+  # Manual pentest toolbox container for demos: sqlmap, hydra, nmap, curl, jq.
+  attacker-tools:
+    build: ./targets/attacker-tools
+    container_name: cybersim-attacker-tools
+    restart: unless-stopped
+    command: ["sleep", "infinity"]
+    depends_on:
+      juice-shop:
+        condition: service_healthy
+      vuln-node-api:
+        condition: service_healthy
+      weak-ssh:
+        condition: service_healthy
+    networks:
+      - cybersim-net
 
 networks:
   cybersim-net:

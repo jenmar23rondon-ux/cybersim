@@ -1,9 +1,4 @@
-"""Guided attack scenarios.
-
-Each scenario is a named, ordered sequence of attack steps with a short
-narrative. Running a scenario launches an auto-campaign that chains the steps,
-correlating everything under one campaign id (and one SIEM correlation trail).
-"""
+"""Guided attack scenarios."""
 
 from __future__ import annotations
 
@@ -20,19 +15,19 @@ SCENARIOS: dict[str, dict] = {
                 "attack_type": "port_scan",
                 "target": "vuln-node-api",
                 "params": {"ports": "3001,8000,80,443"},
-                "narrative": "Reconnaissance — discover which services the target exposes.",
+                "narrative": "Reconnaissance: discover which services the target exposes.",
             },
             {
                 "attack_type": "sql_injection",
                 "target": "vuln-node-api",
                 "params": {},
-                "narrative": "Exploit — bypass authentication and dump data via SQL injection.",
+                "narrative": "Exploit: bypass authentication and dump data via SQL injection.",
             },
             {
                 "attack_type": "xss",
                 "target": "vuln-node-api",
                 "params": {},
-                "narrative": "Exploit — inject scripts through unescaped reflected input.",
+                "narrative": "Exploit: inject scripts through unescaped reflected input.",
             },
         ],
     },
@@ -48,7 +43,7 @@ SCENARIOS: dict[str, dict] = {
                 "attack_type": "brute_force",
                 "target": "vuln-node-api",
                 "params": {"mode": "http", "port": 3001},
-                "narrative": "Brute force the HTTP login endpoint (no lockout).",
+                "narrative": "Brute force the HTTP login endpoint with no lockout.",
             },
             {
                 "attack_type": "brute_force",
@@ -60,10 +55,10 @@ SCENARIOS: dict[str, dict] = {
     },
     "full_recon_exploit": {
         "id": "full_recon_exploit",
-        "name": "Full Recon → Exploit (all modules)",
+        "name": "Full Recon to Exploit",
         "description": (
             "The complete kill-chain demo: scan, inject, script, guess credentials, "
-            "and stress the service — every CyberSim module in one run."
+            "and stress the service with every CyberSim module in one run."
         ),
         "steps": [
             {
@@ -126,6 +121,34 @@ SCENARIOS: dict[str, dict] = {
             },
         ],
     },
+    "juice_shop_demo": {
+        "id": "juice_shop_demo",
+        "name": "Juice Shop Two-Face Demo",
+        "description": (
+            "Show the vulnerable app on one side while CyberSim runs recon, sqlmap, "
+            "and a bounded load test against the local Juice Shop container."
+        ),
+        "steps": [
+            {
+                "attack_type": "port_scan",
+                "target": "juice-shop",
+                "params": {"ports": "3000,80,443"},
+                "narrative": "Map the exposed service on the OWASP Juice Shop target.",
+            },
+            {
+                "attack_type": "sqlmap_juice",
+                "target": "juice-shop",
+                "params": {"port": 3000, "search": "apple", "timeout": 90},
+                "narrative": "Run sqlmap in a conservative local-lab profile.",
+            },
+            {
+                "attack_type": "ddos_sim",
+                "target": "juice-shop",
+                "params": {"port": 3000, "path": "/", "requests": 60, "concurrency": 8},
+                "narrative": "Demonstrate request pressure with hard safety caps.",
+            },
+        ],
+    },
 }
 
 
@@ -136,8 +159,11 @@ def list_scenarios() -> list[dict]:
             "name": s["name"],
             "description": s["description"],
             "steps": [
-                {"attack_type": st["attack_type"], "target": st["target"],
-                 "narrative": st["narrative"]}
+                {
+                    "attack_type": st["attack_type"],
+                    "target": st["target"],
+                    "narrative": st["narrative"],
+                }
                 for st in s["steps"]
             ],
         }

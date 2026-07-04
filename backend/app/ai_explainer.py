@@ -12,7 +12,7 @@ import json
 
 from .config import get_settings
 
-# Offline knowledge base — also used as the prompt scaffold for the LLM.
+# Offline knowledge base - also used as the prompt scaffold for the LLM.
 KNOWLEDGE_BASE: dict[str, dict] = {
     "sql_injection": {
         "title": "SQL Injection",
@@ -80,7 +80,7 @@ KNOWLEDGE_BASE: dict[str, dict] = {
         "what": (
             "The attacker sends a controlled burst of concurrent requests to measure "
             "how service latency degrades under load. CyberSim keeps the rate low and "
-            "bounded — this demonstrates the concept, it does not flood."
+            "bounded - this demonstrates the concept, it does not flood."
         ),
         "vulnerability": "No rate limiting / insufficient capacity & autoscaling.",
         "fix": [
@@ -90,6 +90,37 @@ KNOWLEDGE_BASE: dict[str, dict] = {
             "Anomaly detection on request volume.",
         ],
         "mitre": {"id": "T1498", "name": "Network Denial of Service"},
+    },
+    "sqlmap_juice": {
+        "title": "sqlmap against OWASP Juice Shop",
+        "what": (
+            "CyberSim launches sqlmap with a conservative profile against the local "
+            "OWASP Juice Shop search endpoint to demonstrate how industry tools "
+            "automate SQL injection testing."
+        ),
+        "vulnerability": "Potential injectable web parameter in a local vulnerable training app.",
+        "fix": [
+            "Use parameterized queries and ORM-safe query builders.",
+            "Add regression tests for injection payloads.",
+            "Monitor unusual query strings and automated scanner user agents.",
+            "Keep vulnerable training apps isolated from production networks.",
+        ],
+        "mitre": {"id": "T1190", "name": "Exploit Public-Facing Application"},
+    },
+    "hydra_bruteforce": {
+        "title": "Hydra Credential Audit",
+        "what": (
+            "CyberSim launches hydra against a local lab login profile to demonstrate "
+            "credential guessing with a standard pentest toolkit."
+        ),
+        "vulnerability": "Weak credentials and missing throttling or lockout controls.",
+        "fix": [
+            "Enable MFA and rate limiting.",
+            "Block common passwords and default lab credentials.",
+            "Alert on failed-login bursts and success-after-failure patterns.",
+            "Segment administrative services away from public routes.",
+        ],
+        "mitre": {"id": "T1110", "name": "Brute Force"},
     },
 }
 

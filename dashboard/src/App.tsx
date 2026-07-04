@@ -22,6 +22,7 @@ import { ScenarioPanel } from "./components/ScenarioPanel";
 import { CampaignProgress } from "./components/CampaignProgress";
 import { MetricsStrip } from "./components/MetricsStrip";
 import { DefensePanel } from "./components/DefensePanel";
+import { TargetShowcase } from "./components/TargetShowcase";
 
 type Status = "running" | "success" | "failed";
 type Mode = "single" | "scenario";
@@ -164,6 +165,8 @@ export default function App() {
       </div>
 
       <MetricsStrip metrics={metrics} />
+
+      <TargetShowcase />
 
       {error && (
         <div className="panel" style={{ borderColor: "var(--err)", marginBottom: 16 }}>

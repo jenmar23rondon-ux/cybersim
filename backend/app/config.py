@@ -15,8 +15,9 @@ class Settings(BaseSettings):
 
     # Only these destinations may ever be attacked. Everything else is rejected.
     target_allowlist: str = (
-        "dvwa,vuln-node-api,weak-ssh,localhost,127.0.0.1,"
-        "cybersim-dvwa,cybersim-vuln-node,cybersim-weak-ssh"
+        "dvwa,vuln-node-api,weak-ssh,juice-shop,juice-shop-target,"
+        "localhost,127.0.0.1,cybersim-dvwa,cybersim-vuln-node,"
+        "cybersim-weak-ssh,cybersim-juice-shop"
     )
 
     @property

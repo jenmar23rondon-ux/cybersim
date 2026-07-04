@@ -121,6 +121,108 @@ textarea { resize: vertical; min-height: 60px; }
 .muted { color: var(--muted); font-size: 12px; }
 .section-title { display:flex; align-items:center; gap:10px; margin-bottom: 12px; }
 
+.showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, .8fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.target-browser {
+  min-height: 320px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0d131c;
+}
+.browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+  background: #151d28;
+}
+.browser-bar span {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--err);
+}
+.browser-bar span:nth-child(2) { background: var(--warn); }
+.browser-bar span:nth-child(3) { background: var(--ok); }
+.browser-bar code {
+  margin-left: 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.browser-body {
+  display: flex;
+  min-height: 270px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 26px;
+}
+.browser-body strong { font-size: 20px; }
+.browser-body p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.browser-body a {
+  width: fit-content;
+  color: #06121a;
+  background: var(--accent);
+  border-radius: 8px;
+  padding: 9px 12px;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 13px;
+}
+.mini-link {
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 10px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+}
+.target-card,
+.tool-note {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  margin-bottom: 10px;
+  padding: 11px 12px;
+  text-decoration: none;
+}
+.target-card:hover { border-color: var(--accent); }
+.target-card span,
+.tool-note span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.target-card code,
+.tool-note code {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 12px;
+  word-break: break-word;
+}
+@media (max-width: 900px) {
+  .showcase { grid-template-columns: 1fr; }
+  .target-browser { min-height: 260px; }
+  .browser-body { min-height: 210px; padding: 20px; }
+}
+
 .metrics-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

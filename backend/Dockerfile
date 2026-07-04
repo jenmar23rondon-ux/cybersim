@@ -1,8 +1,8 @@
 FROM python:3.12-slim
 
-# nmap for the port scanner module; build tools for asyncpg wheels if needed.
+# nmap/sqlmap/hydra are used only against allowlisted local lab containers.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nmap \
+    && apt-get install -y --no-install-recommends nmap sqlmap hydra \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
