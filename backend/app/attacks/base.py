@@ -26,8 +26,9 @@ class AttackModule(Protocol):
     params_schema: dict
 
 
-def register(module: "AttackModuleBase") -> "AttackModuleBase":
-    REGISTRY[module.id] = module
+def register(module: type["AttackModuleBase"] | "AttackModuleBase"):
+    instance = module() if isinstance(module, type) else module
+    REGISTRY[instance.id] = instance
     return module
 
 
