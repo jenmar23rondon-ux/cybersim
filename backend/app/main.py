@@ -21,6 +21,7 @@ from .defense import build_metrics, enrich_run, list_playbooks, playbook_for
 from .engine import create_run, execute_run
 from .models import AttackRun, Campaign
 from .report import build_campaign_report, build_report
+from .remediation import guide_for, list_guides
 from .safety import TargetNotAllowed
 from .schemas import AttackRequest, CampaignRequest
 from .scenarios import list_scenarios
@@ -80,6 +81,16 @@ async def defense_playbook(attack_type: str):
 @app.get("/api/metrics")
 async def metrics():
     return await build_metrics()
+
+
+@app.get("/api/remediation/guides")
+async def remediation_guides():
+    return list_guides()
+
+
+@app.get("/api/remediation/guides/{attack_type}")
+async def remediation_guide(attack_type: str):
+    return guide_for(attack_type)
 
 
 @app.post("/api/attacks")

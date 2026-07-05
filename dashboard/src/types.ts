@@ -44,6 +44,17 @@ export interface DefenseSummary extends DefensePlaybook {
   event_count: number;
 }
 
+export interface RemediationGuide {
+  attack_type: string;
+  title: string;
+  goal: string;
+  applies_to: string[];
+  difficulty: "easy" | "medium" | "hard" | string;
+  steps: string[];
+  secure_pattern: string;
+  verify: string[];
+}
+
 export interface ScenarioStep {
   attack_type: string;
   target: string;

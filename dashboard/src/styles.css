@@ -296,6 +296,97 @@ textarea { resize: vertical; min-height: 60px; }
 .severity.high,
 .severity.critical { color: var(--err); border-color: var(--err); }
 
+.remedy-hero {
+  background: #0d131c;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.remedy-hero strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+.remedy-hero p {
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.45;
+}
+.remedy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.remedy-block {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.remedy-block pre {
+  margin: 8px 0 0;
+  padding: 10px;
+  overflow-x: auto;
+  background: #060a10;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.file-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.file-list code {
+  color: var(--accent);
+  background: #0d131c;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 7px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.checklist {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.checklist li {
+  display: flex;
+  gap: 8px;
+  color: var(--text);
+  margin: 7px 0;
+  line-height: 1.35;
+}
+.checklist li span {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  border-radius: 4px;
+  border: 1px solid var(--accent);
+  background: #0d131c;
+}
+.difficulty {
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 4px 9px;
+  border: 1px solid var(--border);
+  color: var(--accent);
+}
+.difficulty.easy { color: var(--ok); border-color: var(--ok); }
+.difficulty.medium { color: var(--warn); border-color: var(--warn); }
+.difficulty.hard { color: var(--err); border-color: var(--err); }
+@media (max-width: 700px) { .remedy-grid { grid-template-columns: 1fr; } }
+
 /* Mode tabs */
 .tabs { display:flex; gap:8px; margin-bottom: 16px; }
 .tab {

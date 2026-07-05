@@ -1,4 +1,4 @@
-import type { AttackModule, AttackRun, Campaign, DefensePlaybook, Metrics, Scenario } from "./types";
+import type { AttackModule, AttackRun, Campaign, DefensePlaybook, Metrics, RemediationGuide, Scenario } from "./types";
 
 export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 export const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8000";
@@ -17,6 +17,9 @@ export const api = {
   metrics: () => fetch(`${API_URL}/api/metrics`).then((r) => j<Metrics>(r)),
 
   playbooks: () => fetch(`${API_URL}/api/defense/playbooks`).then((r) => j<DefensePlaybook[]>(r)),
+
+  remediationGuides: () =>
+    fetch(`${API_URL}/api/remediation/guides`).then((r) => j<RemediationGuide[]>(r)),
 
   launch: (attack_type: string, target: string, params: Record<string, any>) =>
     fetch(`${API_URL}/api/attacks`, {

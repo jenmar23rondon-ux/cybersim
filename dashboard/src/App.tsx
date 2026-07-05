@@ -8,6 +8,7 @@ import type {
   DefensePlaybook,
   DefenseSummary,
   Metrics,
+  RemediationGuide,
   Scenario,
 } from "./types";
 import { useAttackSocket } from "./hooks/useWebSocket";
@@ -23,6 +24,7 @@ import { CampaignProgress } from "./components/CampaignProgress";
 import { MetricsStrip } from "./components/MetricsStrip";
 import { DefensePanel } from "./components/DefensePanel";
 import { TargetShowcase } from "./components/TargetShowcase";
+import { RemediationLab } from "./components/RemediationLab";
 
 type Status = "running" | "success" | "failed";
 type Mode = "single" | "scenario";
@@ -40,6 +42,7 @@ export default function App() {
   const [history, setHistory] = useState<AttackRun[]>([]);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [playbooks, setPlaybooks] = useState<DefensePlaybook[]>([]);
+  const [remediationGuides, setRemediationGuides] = useState<RemediationGuide[]>([]);
   const [activeDefense, setActiveDefense] = useState<DefenseSummary | null>(null);
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [isCampaign, setIsCampaign] = useState(false);
@@ -56,6 +59,10 @@ export default function App() {
     [playbooks, selectedId]
   );
   const defenseView = activeDefense || selectedPlaybook;
+  const remediationView = useMemo(
+    () => remediationGuides.find((g) => g.attack_type === selectedId) || null,
+    [remediationGuides, selectedId]
+  );
   const progress = events.length ? events[events.length - 1].progress : 0;
 
   useEffect(() => {
@@ -68,6 +75,7 @@ export default function App() {
       if (s.length) setSelectedScenario(s[0].id);
     }).catch(() => {});
     api.playbooks().then(setPlaybooks).catch(() => {});
+    api.remediationGuides().then(setRemediationGuides).catch(() => {});
     refreshMetrics();
     refreshHistory();
   }, []);
@@ -242,6 +250,9 @@ export default function App() {
 
           <div style={{ height: 16 }} />
           <DefensePanel playbook={defenseView} />
+
+          <div style={{ height: 16 }} />
+          <RemediationLab guide={remediationView} />
         </div>
       </div>
 

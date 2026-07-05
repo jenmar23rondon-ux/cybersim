@@ -38,6 +38,8 @@ network. It never touches external systems.
 - New industry-tool modules: `sqlmap_juice` and `hydra_bruteforce`.
 - New manual toolbox container: `cybersim-attacker-tools` with `sqlmap`,
   `hydra`, `nmap`, `curl`, and `jq`.
+- New **Remediation Lab** panel with fix steps, secure code patterns, files to
+  inspect, and validation checks for each attack type.
 - Smaller Docker build contexts via service-level `.dockerignore` files.
 
 ---
