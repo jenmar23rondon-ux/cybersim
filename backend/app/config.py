@@ -21,6 +21,21 @@ class Settings(BaseSettings):
     )
 
     @property
+    def async_database_url(self) -> str:
+        """Return a SQLAlchemy async URL.
+
+        Railway's Postgres plugin exposes DATABASE_URL as postgresql://...
+        SQLAlchemy interprets that as the sync psycopg2 driver. CyberSim uses
+        async SQLAlchemy sessions, so normalize it to postgresql+asyncpg://...
+        automatically.
+        """
+        if self.database_url.startswith("postgres://"):
+            return self.database_url.replace("postgres://", "postgresql+asyncpg://", 1)
+        if self.database_url.startswith("postgresql://"):
+            return self.database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return self.database_url
+
+    @property
     def allowlist(self) -> set[str]:
         return {h.strip().lower() for h in self.target_allowlist.split(",") if h.strip()}
 
