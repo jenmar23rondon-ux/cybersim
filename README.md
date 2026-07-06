@@ -23,6 +23,16 @@ network. It never touches external systems.
 | Reports | fpdf2 | PDF with executive summary, technical detail, remediation |
 | SIEM | Webhook | Forwards every event to **SecureWatch** with a shared `correlation_id` |
 
+## Screenshots
+
+### CyberSim dashboard
+
+![CyberSim dashboard](docs/screenshots/cybersim-dashboard.png)
+
+### Live analysis and attack workflow
+
+![CyberSim live analysis](docs/screenshots/cybersim-live-analysis.png)
+
 ## New in this expanded version
 
 - Executive KPI strip in the dashboard: total runs, confirmed findings,
