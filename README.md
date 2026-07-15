@@ -83,6 +83,21 @@ Then open:
 | Vulnerable Node API | http://localhost:3001 |
 | Weak SSH | `ssh labuser@localhost -p 2222` (pw: `password123`) |
 
+## Mobile app mode
+
+The dashboard is also an installable PWA. After deploying the `dashboard/`
+folder to Vercel, open the public Vercel URL on your phone and install it:
+
+- **Android / Chrome:** tap **Install app** in CyberSim, or browser menu ->
+  **Add to Home screen**.
+- **iPhone / Safari:** tap Share -> **Add to Home Screen**.
+
+For a local phone demo without Vercel, keep the PC and phone on the same Wi-Fi
+and open the dashboard with the PC LAN IP, for example
+`http://192.168.1.25:5173`. Do not use `localhost` from the phone: on mobile,
+`localhost` means the phone itself, not your computer. The vulnerable targets
+and attack engine still run only inside your local Docker lab.
+
 Manual pentest toolbox:
 
 ```bash

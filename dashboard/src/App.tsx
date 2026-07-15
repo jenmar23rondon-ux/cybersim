@@ -25,6 +25,7 @@ import { MetricsStrip } from "./components/MetricsStrip";
 import { DefensePanel } from "./components/DefensePanel";
 import { TargetShowcase } from "./components/TargetShowcase";
 import { RemediationLab } from "./components/RemediationLab";
+import { PWAInstall } from "./components/PWAInstall";
 
 type Status = "running" | "success" | "failed";
 type Mode = "single" | "scenario";
@@ -169,6 +170,7 @@ export default function App() {
           <span className={`dot ${connected ? "on" : "off"}`} />
           {connected ? "WebSocket live" : "WebSocket idle"}
         </span>
+        <PWAInstall />
         <span className="badge-lab">LOCAL LAB ONLY</span>
       </div>
 
