@@ -50,6 +50,8 @@ network. It never touches external systems.
   `hydra`, `nmap`, `curl`, and `jq`.
 - New **Remediation Lab** panel with fix steps, secure code patterns, files to
   inspect, and validation checks for each attack type.
+- New **CyberBank Mini App** Docker target at `http://localhost:3003`, designed
+  to show the vulnerable app in one tab while CyberSim attacks it in real time.
 - Smaller Docker build contexts via service-level `.dockerignore` files.
 
 ---
@@ -80,6 +82,7 @@ Then open:
 | Backend API / docs | http://localhost:8000/docs |
 | DVWA | http://localhost:4280 |
 | OWASP Juice Shop | http://localhost:3002 |
+| CyberBank Mini App | http://localhost:3003 |
 | Vulnerable Node API | http://localhost:3001 |
 | Weak SSH | `ssh labuser@localhost -p 2222` (pw: `password123`) |
 
@@ -105,7 +108,7 @@ docker exec -it cybersim-attacker-tools bash
 ```
 
 Inside that container, targets are addressed by Docker service name, for example
-`juice-shop:3000`, `vuln-node-api:3001`, and `weak-ssh:22`.
+`mini-vuln-app:3003`, `juice-shop:3000`, `vuln-node-api:3001`, and `weak-ssh:22`.
 
 The AI Explainer and SecureWatch forwarding are **optional** — leave the keys
 blank in `.env` and CyberSim uses its built-in offline explanations and skips
@@ -179,6 +182,14 @@ SIEM saw the attack in real time. The same ID is printed in the PDF report.
 | `ddos_sim` | any lab host | T1498 | **Hard-capped** low-rate load test (≤200 req, ≤20 concurrent) |
 | `sqlmap_juice` | juice-shop | T1190 | Conservative sqlmap profile against OWASP Juice Shop |
 | `hydra_bruteforce` | weak-ssh / juice-shop | T1110 | Hydra credential audit with bounded local wordlists |
+
+The built-in `sql_injection`, `brute_force`, `xss`, `port_scan`, and `ddos_sim`
+modules can also target the visual CyberBank Mini App by setting:
+
+```text
+Target: mini-vuln-app
+Port: 3003
+```
 
 ---
 

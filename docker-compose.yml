@@ -109,6 +109,22 @@ services:
       retries: 6
       start_period: 10s
 
+  # Mini visual vulnerable app used to show the "other side" of attacks.
+  mini-vuln-app:
+    build: ./targets/mini-vulnerable-app
+    container_name: cybersim-mini-vuln
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    networks:
+      - cybersim-net
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3003/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
   # OWASP Juice Shop: standard vulnerable web app for the "target face" demo.
   juice-shop:
     image: bkimminich/juice-shop:latest
@@ -152,6 +168,8 @@ services:
       juice-shop:
         condition: service_healthy
       vuln-node-api:
+        condition: service_healthy
+      mini-vuln-app:
         condition: service_healthy
       weak-ssh:
         condition: service_healthy

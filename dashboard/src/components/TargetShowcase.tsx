@@ -1,5 +1,11 @@
 const TARGETS = [
   {
+    name: "CyberBank Mini App",
+    url: "http://localhost:3003",
+    container: "mini-vuln-app:3003",
+    purpose: "Visual mini target for live SQLi, XSS, brute force, scans, and fix demos.",
+  },
+  {
     name: "OWASP Juice Shop",
     url: "http://localhost:3002",
     container: "juice-shop:3000",
@@ -29,21 +35,25 @@ export function TargetShowcase() {
           <a className="mini-link" href="http://localhost:3002" target="_blank" rel="noreferrer">
             Open Juice Shop
           </a>
+          <a className="mini-link" href="http://localhost:3003" target="_blank" rel="noreferrer">
+            Open CyberBank
+          </a>
         </div>
         <div className="target-browser">
           <div className="browser-bar">
             <span />
             <span />
             <span />
-            <code>http://localhost:3002</code>
+            <code>http://localhost:3003</code>
           </div>
           <div className="browser-body">
-            <strong>OWASP Juice Shop is running as the vulnerable app.</strong>
+            <strong>CyberBank Mini App is running as a vulnerable Docker target.</strong>
             <p>
               Open it in a second tab or side-by-side window while CyberSim runs
-              sqlmap, hydra, scans, and bounded load tests from the attack console.
+              SQL injection, XSS, brute force, scans, and bounded load tests from
+              the attack console.
             </p>
-            <a href="http://localhost:3002" target="_blank" rel="noreferrer">
+            <a href="http://localhost:3003" target="_blank" rel="noreferrer">
               Open live vulnerable app
             </a>
           </div>

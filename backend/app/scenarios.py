@@ -149,6 +149,40 @@ SCENARIOS: dict[str, dict] = {
             },
         ],
     },
+    "mini_app_takeover": {
+        "id": "mini_app_takeover",
+        "name": "Mini App Takeover Demo",
+        "description": (
+            "Attack the visual CyberBank mini app: scan the Docker target, guess "
+            "weak credentials, prove SQL injection, and confirm reflected XSS."
+        ),
+        "steps": [
+            {
+                "attack_type": "port_scan",
+                "target": "mini-vuln-app",
+                "params": {"ports": "3003,80,443,3001"},
+                "narrative": "Reconnaissance: confirm the mini app exposes its web service.",
+            },
+            {
+                "attack_type": "brute_force",
+                "target": "mini-vuln-app",
+                "params": {"mode": "http", "port": 3003},
+                "narrative": "Credential attack: find the weak admin password with a bounded wordlist.",
+            },
+            {
+                "attack_type": "sql_injection",
+                "target": "mini-vuln-app",
+                "params": {"port": 3003},
+                "narrative": "Exploit: leak rows through the intentionally injectable user lookup.",
+            },
+            {
+                "attack_type": "xss",
+                "target": "mini-vuln-app",
+                "params": {"port": 3003},
+                "narrative": "Exploit: confirm the search page reflects script payloads without escaping.",
+            },
+        ],
+    },
 }
 
 
