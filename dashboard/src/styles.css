@@ -284,6 +284,175 @@ textarea { resize: vertical; min-height: 60px; }
 .metric.danger strong { color: var(--err); }
 @media (max-width: 700px) { .metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
+.impact {
+  margin-bottom: 16px;
+}
+.impact-score {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 10px;
+}
+.impact-score.ok { color: var(--ok); border-color: rgba(46,204,113,.7); }
+.impact-score.warn { color: var(--warn); border-color: rgba(241,196,15,.7); }
+.impact-score.danger { color: var(--err); border-color: rgba(255,92,92,.7); }
+.impact-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.impact-kpi {
+  background: #0d131c;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.impact-kpi span,
+.impact-kpi strong {
+  display: block;
+}
+.impact-kpi span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.impact-kpi strong {
+  font-size: 24px;
+  margin-top: 4px;
+}
+.impact-kpi.ok strong { color: var(--ok); }
+.impact-kpi.warn strong { color: var(--warn); }
+.impact-kpi.danger strong { color: var(--err); }
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.asset-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 12px;
+}
+.asset-card.affected { border-color: rgba(255,92,92,.75); box-shadow: inset 3px 0 0 var(--err); }
+.asset-card.watch { border-color: rgba(241,196,15,.55); box-shadow: inset 3px 0 0 var(--warn); }
+.asset-card.clear { border-color: rgba(46,204,113,.45); box-shadow: inset 3px 0 0 var(--ok); }
+.asset-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.asset-head strong {
+  flex: 1;
+  font-size: 13px;
+}
+.asset-head span {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 7px;
+  text-transform: uppercase;
+}
+.asset-card.affected .asset-head span { color: var(--err); border-color: rgba(255,92,92,.7); }
+.asset-card.watch .asset-head span { color: var(--warn); border-color: rgba(241,196,15,.7); }
+.asset-card.clear .asset-head span { color: var(--ok); border-color: rgba(46,204,113,.65); }
+.asset-card p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+  min-height: 34px;
+}
+.confidence {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #0d131c;
+  border: 1px solid var(--border);
+}
+.confidence div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+.asset-card.affected .confidence div { background: var(--err); }
+.asset-card.watch .confidence div { background: var(--warn); }
+.asset-card.clear .confidence div { background: var(--ok); }
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.mini-chart {
+  background: #0d131c;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.mini-chart > strong {
+  display: block;
+  margin-bottom: 9px;
+}
+.chart-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 28px;
+  align-items: center;
+  gap: 8px;
+  margin: 7px 0;
+}
+.chart-row span {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chart-row div {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #060a10;
+  border: 1px solid var(--border);
+}
+.chart-row i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+.chart-row b {
+  color: var(--text);
+  font-size: 12px;
+  text-align: right;
+}
+.impact-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.impact-note strong {
+  color: var(--text);
+}
+@media (max-width: 900px) {
+  .asset-grid,
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 700px) {
+  .impact-summary {
+    grid-template-columns: 1fr;
+  }
+  .chart-row {
+    grid-template-columns: 86px 1fr 24px;
+  }
+}
+
 .defense .block {
   background: var(--panel-2);
   border: 1px solid var(--border);

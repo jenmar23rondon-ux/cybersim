@@ -26,6 +26,7 @@ import { DefensePanel } from "./components/DefensePanel";
 import { TargetShowcase } from "./components/TargetShowcase";
 import { RemediationLab } from "./components/RemediationLab";
 import { PWAInstall } from "./components/PWAInstall";
+import { ImpactMap } from "./components/ImpactMap";
 
 type Status = "running" | "success" | "failed";
 type Mode = "single" | "scenario";
@@ -177,6 +178,16 @@ export default function App() {
       <MetricsStrip metrics={metrics} />
 
       <TargetShowcase />
+
+      <ImpactMap
+        metrics={metrics}
+        history={history}
+        events={events}
+        selectedAttack={selectedId}
+        defense={defenseView}
+        campaign={campaign}
+        isCampaign={isCampaign}
+      />
 
       {error && (
         <div className="panel" style={{ borderColor: "var(--err)", marginBottom: 16 }}>
