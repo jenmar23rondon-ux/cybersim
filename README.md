@@ -149,12 +149,39 @@ backend/app/scenarios.py
 
 - **Metrics Strip**: total runs, confirmed findings, campaigns, average risk.
 - **Target Showcase**: opens vulnerable targets directly.
+- **Target Connector**: connect and reuse additional authorized local apps.
 - **Impact Map**: visual affected/not-affected component map.
 - **Live Attack**: real-time logs over WebSocket with progress and status.
 - **AI Explainer**: explains what happened and how to fix it.
 - **Detection Lab**: SOC playbook, severity, triage questions, SecureWatch query.
 - **Remediation Lab**: fix checklist and secure code patterns.
 - **History**: re-open previous runs and reports.
+
+## Connecting Your Own Apps
+
+CyberSim can connect to other apps you own or are explicitly authorized to test,
+as long as they are local, private-network, or explicitly allowlisted lab
+targets.
+
+Use the **Target Connector** panel in the dashboard:
+
+1. Enter a profile name.
+2. Enter the app URL or Docker service, for example `http://mini-vuln-app:3003`.
+3. Set a health path, for example `/health`.
+4. Click **Test connection**.
+5. If the backend approves and reaches the app, click **Save & apply**.
+6. Launch the selected CyberSim module against the connected target.
+
+The connector stores target profiles in the browser local storage so you can
+reuse them during demos.
+
+Public websites are blocked by design. The backend validates each connector
+through the same safety guard used by attack launches. If the hostname is not
+allowlisted and does not resolve to a private or loopback address, CyberSim
+returns HTTP 403 before any attack module can run.
+
+To add another Docker target, put it on the `cybersim-net` network and add its
+service/container name to `TARGET_ALLOWLIST` in `.env`.
 
 ## Mobile App Mode
 

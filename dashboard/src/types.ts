@@ -120,3 +120,32 @@ export interface Metrics {
     started_at: string | null;
   }>;
 }
+
+export interface TargetProbe {
+  ok: boolean;
+  host: string;
+  port: number;
+  scheme: string;
+  probe_url: string;
+  status_code?: number;
+  content_type?: string;
+  error?: string;
+  details: {
+    host: string;
+    explicitly_allowlisted: boolean;
+    resolved_ip: string | null;
+    private_or_loopback: boolean;
+    allowed: boolean;
+  };
+}
+
+export interface TargetProfile {
+  name: string;
+  url: string;
+  host: string;
+  port: number;
+  scheme: string;
+  healthPath: string;
+  lastStatus: "connected" | "failed";
+  lastChecked: string;
+}

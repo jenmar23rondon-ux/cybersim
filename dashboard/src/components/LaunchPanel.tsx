@@ -4,22 +4,26 @@ import type { AttackModule } from "../types";
 interface Props {
   module: AttackModule | null;
   launching: boolean;
+  targetOverride: { host: string; port: number } | null;
   onLaunch: (target: string, params: Record<string, any>) => void;
 }
 
-export function LaunchPanel({ module, launching, onLaunch }: Props) {
+export function LaunchPanel({ module, launching, targetOverride, onLaunch }: Props) {
   const [target, setTarget] = useState("");
   const [params, setParams] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (!module) return;
-    setTarget(module.default_target);
+    setTarget(targetOverride?.host || module.default_target);
     const defaults: Record<string, any> = {};
     for (const [k, spec] of Object.entries(module.params_schema || {})) {
       defaults[k] = (spec as any).default;
     }
+    if (targetOverride?.port && "port" in (module.params_schema || {})) {
+      defaults.port = targetOverride.port;
+    }
     setParams(defaults);
-  }, [module]);
+  }, [module, targetOverride]);
 
   if (!module) {
     return (

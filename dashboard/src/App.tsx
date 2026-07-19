@@ -27,6 +27,7 @@ import { TargetShowcase } from "./components/TargetShowcase";
 import { RemediationLab } from "./components/RemediationLab";
 import { PWAInstall } from "./components/PWAInstall";
 import { ImpactMap } from "./components/ImpactMap";
+import { TargetConnector } from "./components/TargetConnector";
 
 type Status = "running" | "success" | "failed";
 type Mode = "single" | "scenario";
@@ -49,6 +50,7 @@ export default function App() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [isCampaign, setIsCampaign] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [connectedTarget, setConnectedTarget] = useState<{ host: string; port: number } | null>(null);
 
   const { events, connected } = useAttackSocket(correlationId);
 
@@ -213,7 +215,14 @@ export default function App() {
                 setActiveDefense(null);
               }} />
               <div style={{ height: 16 }} />
-              <LaunchPanel module={selected} launching={launching} onLaunch={launchSingle} />
+              <LaunchPanel
+                module={selected}
+                launching={launching}
+                targetOverride={connectedTarget}
+                onLaunch={launchSingle}
+              />
+              <div style={{ height: 16 }} />
+              <TargetConnector onApply={setConnectedTarget} />
             </>
           ) : (
             <ScenarioPanel

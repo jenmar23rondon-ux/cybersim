@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+import httpx
 from sqlalchemy import select
 
 from .attacks import REGISTRY
@@ -22,8 +23,8 @@ from .engine import create_run, execute_run
 from .models import AttackRun, Campaign
 from .report import build_campaign_report, build_report
 from .remediation import guide_for, list_guides
-from .safety import TargetNotAllowed
-from .schemas import AttackRequest, CampaignRequest
+from .safety import TargetNotAllowed, assert_target_allowed, describe_target
+from .schemas import AttackRequest, CampaignRequest, TargetProbeRequest
 from .scenarios import list_scenarios
 from .seed import seed_demo_data
 from .ws_manager import manager
@@ -91,6 +92,49 @@ async def remediation_guides():
 @app.get("/api/remediation/guides/{attack_type}")
 async def remediation_guide(attack_type: str):
     return guide_for(attack_type)
+
+
+@app.post("/api/targets/probe")
+async def probe_target(req: TargetProbeRequest):
+    details = describe_target(req.url)
+    try:
+        host = assert_target_allowed(req.url)
+    except TargetNotAllowed as exc:
+        raise HTTPException(403, {
+            "message": str(exc),
+            "details": details,
+        })
+
+    parsed = httpx.URL(req.url if "://" in req.url else f"http://{req.url}")
+    port = parsed.port or (443 if parsed.scheme == "https" else 80)
+    scheme = parsed.scheme or "http"
+    path = req.path if req.path.startswith("/") else f"/{req.path}"
+    probe_url = f"{scheme}://{host}:{port}{path}"
+
+    try:
+        async with httpx.AsyncClient(timeout=5, follow_redirects=True) as client:
+            response = await client.get(probe_url)
+    except Exception as exc:
+        return {
+            "ok": False,
+            "host": host,
+            "port": port,
+            "scheme": scheme,
+            "probe_url": probe_url,
+            "details": details,
+            "error": str(exc),
+        }
+
+    return {
+        "ok": response.status_code < 500,
+        "host": host,
+        "port": port,
+        "scheme": scheme,
+        "probe_url": probe_url,
+        "status_code": response.status_code,
+        "content_type": response.headers.get("content-type", ""),
+        "details": details,
+    }
 
 
 @app.post("/api/attacks")

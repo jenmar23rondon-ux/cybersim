@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ipaddress
 import socket
+from urllib.parse import urlparse
 
 from .config import get_settings
 
@@ -34,6 +35,38 @@ def _is_private_ip(host: str) -> bool:
     return any(ip in net for net in _PRIVATE_NETS)
 
 
+def normalize_target(target: str) -> str:
+    """Normalize a target string to hostname only."""
+    host = target.strip().lower()
+    parsed = urlparse(host if "://" in host else f"//{host}", scheme="http")
+    host = parsed.hostname or host.split("/")[0].split(":")[0]
+    return host
+
+
+def describe_target(target: str) -> dict:
+    """Return normalized target details used by the connector UI."""
+    host = normalize_target(target)
+    allow = get_settings().allowlist
+    explicit = host in allow
+    resolved = None
+    private = _is_private_ip(host)
+
+    if not private:
+        try:
+            resolved = socket.gethostbyname(host)
+            private = _is_private_ip(resolved)
+        except socket.gaierror:
+            resolved = None
+
+    return {
+        "host": host,
+        "explicitly_allowlisted": explicit,
+        "resolved_ip": resolved,
+        "private_or_loopback": private,
+        "allowed": explicit or private,
+    }
+
+
 def assert_target_allowed(target: str) -> str:
     """Return the normalized host if allowed, else raise ``TargetNotAllowed``.
 
@@ -44,9 +77,7 @@ def assert_target_allowed(target: str) -> str:
     if not target:
         raise TargetNotAllowed("Empty target.")
 
-    host = target.strip().lower()
-    # Strip scheme/port if a URL-ish value slipped through.
-    host = host.split("://")[-1].split("/")[0].split(":")[0]
+    host = normalize_target(target)
 
     allow = get_settings().allowlist
     if host in allow:

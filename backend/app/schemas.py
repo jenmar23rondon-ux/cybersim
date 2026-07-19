@@ -13,6 +13,11 @@ class CampaignRequest(BaseModel):
     scenario_id: str = Field(..., examples=["web_app_pentest"])
 
 
+class TargetProbeRequest(BaseModel):
+    url: str = Field(..., examples=["http://mini-vuln-app:3003"])
+    path: str = Field(default="/health", examples=["/health"])
+
+
 class LogEvent(BaseModel):
     correlation_id: str
     attack_type: str
