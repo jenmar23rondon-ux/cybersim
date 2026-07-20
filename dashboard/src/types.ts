@@ -124,6 +124,8 @@ export interface Metrics {
 export interface TargetProbe {
   ok: boolean;
   host: string;
+  attack_host: string;
+  probe_host: string;
   port: number;
   scheme: string;
   probe_url: string;

@@ -7,6 +7,13 @@ interface Props {
 }
 
 const STORAGE_KEY = "cybersim.targetProfiles";
+const LOCAL_PORT_TARGETS: Record<number, string> = {
+  3001: "vuln-node-api",
+  3002: "juice-shop",
+  3003: "mini-vuln-app",
+  4280: "dvwa",
+  2222: "weak-ssh",
+};
 
 export function TargetConnector({ onApply }: Props) {
   const [name, setName] = useState("CyberBank local app");
@@ -54,9 +61,9 @@ export function TargetConnector({ onApply }: Props) {
     const result = probe?.ok ? probe : await testConnection();
     if (!result?.ok) return;
     const profile: TargetProfile = {
-      name: name.trim() || result.host,
+      name: name.trim() || result.attack_host,
       url,
-      host: result.host,
+      host: result.attack_host,
       port: result.port,
       scheme: result.scheme,
       healthPath,
@@ -70,6 +77,13 @@ export function TargetConnector({ onApply }: Props) {
 
   const removeProfile = (profile: TargetProfile) => {
     saveProfiles(profiles.filter((item) => item !== profile));
+  };
+
+  const applyProfile = (profile: TargetProfile) => {
+    onApply({
+      host: normalizeLaunchHost(profile.host, profile.port),
+      port: profile.port,
+    });
   };
 
   return (
@@ -114,6 +128,9 @@ export function TargetConnector({ onApply }: Props) {
           <span>
             {probe.host}:{probe.port} {"->"} {probe.status_code || probe.error || "no response"}
           </span>
+          {probe.attack_host !== probe.host && (
+            <span>Docker target: {probe.attack_host}:{probe.port}</span>
+          )}
         </div>
       )}
       {error && <div className="connector-error">{error}</div>}
@@ -126,7 +143,7 @@ export function TargetConnector({ onApply }: Props) {
                 <strong>{profile.name}</strong>
                 <span>{profile.host}:{profile.port}</span>
               </div>
-              <button type="button" onClick={() => onApply({ host: profile.host, port: profile.port })}>Apply</button>
+              <button type="button" onClick={() => applyProfile(profile)}>Apply</button>
               <button type="button" onClick={() => removeProfile(profile)}>Remove</button>
             </div>
           ))}
@@ -134,4 +151,11 @@ export function TargetConnector({ onApply }: Props) {
       )}
     </div>
   );
+}
+
+function normalizeLaunchHost(host: string, port: number) {
+  if (host === "localhost" || host === "127.0.0.1") {
+    return LOCAL_PORT_TARGETS[port] || "host.docker.internal";
+  }
+  return host;
 }

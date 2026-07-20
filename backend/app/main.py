@@ -29,6 +29,15 @@ from .scenarios import list_scenarios
 from .seed import seed_demo_data
 from .ws_manager import manager
 
+LOCAL_PORT_TARGETS = {
+    3001: "vuln-node-api",
+    3002: "juice-shop",
+    3003: "mini-vuln-app",
+    4280: "dvwa",
+    8000: "backend",
+    2222: "weak-ssh",
+}
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -109,7 +118,9 @@ async def probe_target(req: TargetProbeRequest):
     port = parsed.port or (443 if parsed.scheme == "https" else 80)
     scheme = parsed.scheme or "http"
     path = req.path if req.path.startswith("/") else f"/{req.path}"
-    probe_url = f"{scheme}://{host}:{port}{path}"
+    probe_host = _docker_probe_host(host, port)
+    attack_host = probe_host
+    probe_url = f"{scheme}://{probe_host}:{port}{path}"
 
     try:
         async with httpx.AsyncClient(timeout=5, follow_redirects=True) as client:
@@ -118,6 +129,8 @@ async def probe_target(req: TargetProbeRequest):
         return {
             "ok": False,
             "host": host,
+            "attack_host": attack_host,
+            "probe_host": probe_host,
             "port": port,
             "scheme": scheme,
             "probe_url": probe_url,
@@ -128,6 +141,8 @@ async def probe_target(req: TargetProbeRequest):
     return {
         "ok": response.status_code < 500,
         "host": host,
+        "attack_host": attack_host,
+        "probe_host": probe_host,
         "port": port,
         "scheme": scheme,
         "probe_url": probe_url,
@@ -135,6 +150,13 @@ async def probe_target(req: TargetProbeRequest):
         "content_type": response.headers.get("content-type", ""),
         "details": details,
     }
+
+
+def _docker_probe_host(host: str, port: int) -> str:
+    """Translate browser-local URLs into addresses reachable from containers."""
+    if host in {"localhost", "127.0.0.1"}:
+        return LOCAL_PORT_TARGETS.get(port, "host.docker.internal")
+    return host
 
 
 @app.post("/api/attacks")
