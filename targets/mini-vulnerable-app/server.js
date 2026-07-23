@@ -13,6 +13,63 @@ const users = [
 ];
 
 const auditLog = [];
+const securityEvents = [
+  {
+    id: 1,
+    severity: "info",
+    category: "system",
+    title: "CyberBank API started",
+    affected: "api",
+    at: new Date().toISOString(),
+  },
+];
+const incidents = [];
+const messages = [
+  {
+    id: 1,
+    from: "it-helpdesk@cyberbank.local",
+    subject: "Quarterly password review",
+    risk: "low",
+    status: "delivered",
+  },
+  {
+    id: 2,
+    from: "security@cyberbank.local",
+    subject: "MFA enrollment reminder",
+    risk: "low",
+    status: "delivered",
+  },
+];
+const endpoints = [
+  { id: "CB-WIN-014", user: "ana", status: "healthy", risk: 12, last_signal: "normal login" },
+  { id: "CB-WIN-021", user: "admin", status: "healthy", risk: 18, last_signal: "browser update" },
+  { id: "CB-LNX-API", user: "service-api", status: "healthy", risk: 20, last_signal: "api heartbeat" },
+];
+
+function recordSecurityEvent(event) {
+  const row = {
+    id: securityEvents.length + 1,
+    at: new Date().toISOString(),
+    ...event,
+  };
+  securityEvents.push(row);
+  auditLog.push({ type: "security_event", category: row.category, severity: row.severity, title: row.title, at: row.at });
+  return row;
+}
+
+function createIncident(summary, severity, affected, events) {
+  const row = {
+    id: incidents.length + 1,
+    summary,
+    severity,
+    affected,
+    status: "open",
+    events,
+    created_at: new Date().toISOString(),
+  };
+  incidents.push(row);
+  return row;
+}
 
 function page(shell) {
   return `<!doctype html>
@@ -20,17 +77,21 @@ function page(shell) {
     <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>CyberBank Vulnerable Target</title>
+      <title>CyberBank API Portal</title>
       <style>
-        :root { color-scheme: dark; --bg:#081018; --panel:#111b27; --line:#26364a; --text:#e6f1ff; --muted:#8da2bd; --a:#35c9ff; --b:#ffcf4a; --e:#ff6868; }
+        :root { color-scheme: dark; --bg:#081018; --panel:#111b27; --line:#26364a; --text:#e6f1ff; --muted:#8da2bd; --a:#35c9ff; --b:#ffcf4a; --e:#ff6868; --ok:#65e89d; }
         * { box-sizing: border-box; }
         body { margin:0; font-family: Segoe UI, system-ui, sans-serif; background: radial-gradient(circle at top right,#17314a,var(--bg) 52%); color:var(--text); }
         main { max-width: 1120px; margin: 0 auto; padding: 22px; }
         header { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:18px; }
         h1 { margin:0; color:var(--a); letter-spacing:.2px; }
         .pill { border:1px solid var(--b); color:var(--b); border-radius:999px; padding:6px 10px; font-size:12px; font-weight:800; }
+        .nav { display:flex; gap:8px; flex-wrap:wrap; }
+        .nav a { color:#06121a; background:var(--a); border-radius:999px; padding:8px 10px; font-weight:900; text-decoration:none; font-size:12px; }
         .grid { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
-        .panel { background:rgba(17,27,39,.94); border:1px solid var(--line); border-radius:12px; padding:16px; }
+        .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+        .panel,.card { background:rgba(17,27,39,.94); border:1px solid var(--line); border-radius:12px; padding:16px; }
+        .card { background:#0b1420; }
         .wide { grid-column:1 / -1; }
         h2 { margin:0 0 10px; font-size:16px; color:var(--a); text-transform:uppercase; }
         p { color:var(--muted); line-height:1.5; }
@@ -39,11 +100,14 @@ function page(shell) {
         button { margin-top:12px; cursor:pointer; background:linear-gradient(90deg,var(--a),#6c5ce7); color:#06121a; font-weight:900; border:0; }
         pre { overflow:auto; background:#050a10; border:1px solid var(--line); padding:12px; border-radius:10px; min-height:96px; }
         table { width:100%; border-collapse:collapse; }
-        th,td { border-bottom:1px solid var(--line); text-align:left; padding:9px; }
+        th,td { border-bottom:1px solid var(--line); text-align:left; padding:9px; vertical-align:top; }
         th { color:var(--muted); font-size:12px; }
         code { color:var(--a); }
-        .danger { color:var(--e); font-weight:800; }
-        @media (max-width: 760px) { .grid { grid-template-columns:1fr; } header { align-items:flex-start; flex-direction:column; } }
+        .danger,.sev-critical { color:var(--e); font-weight:800; }
+        .sev-high { color:var(--b); font-weight:800; }
+        .sev-medium { color:var(--a); font-weight:800; }
+        .sev-info { color:var(--ok); font-weight:800; }
+        @media (max-width: 760px) { .grid,.cards { grid-template-columns:1fr; } header { align-items:flex-start; flex-direction:column; } }
       </style>
     </head>
     <body><main>${shell}</main></body>
@@ -54,11 +118,20 @@ app.get("/", (_req, res) => {
   res.send(page(`
     <header>
       <div>
-        <h1>CyberBank</h1>
-        <p>Mini app vulnerable intencional para demostrar las dos caras: sistema expuesto y ataque en vivo.</p>
+        <h1>CyberBank API Portal</h1>
+        <p>Mini empresa Docker con API normal, usuarios, mensajes, endpoints, SOC e incidentes de laboratorio.</p>
       </div>
-      <span class="pill">LOCAL DOCKER TARGET</span>
+      <div class="nav">
+        <a href="/portal">Portal</a>
+        <a href="/security">SOC</a>
+        <a href="/api/status">API JSON</a>
+      </div>
     </header>
+    <section class="cards">
+      <div class="card"><strong>Users</strong><p>${users.length} accounts</p></div>
+      <div class="card"><strong>Endpoints</strong><p>${endpoints.length} monitored devices</p></div>
+      <div class="card"><strong>Open Incidents</strong><p>${incidents.filter((i) => i.status === "open").length} active</p></div>
+    </section>
     <section class="grid">
       <div class="panel">
         <h2>Login vulnerable</h2>
@@ -78,9 +151,13 @@ app.get("/", (_req, res) => {
         </form>
       </div>
       <div class="panel wide">
-        <h2>Endpoints para CyberSim</h2>
+        <h2>API normal + endpoints vulnerables</h2>
         <table>
-          <tr><th>Endpoint</th><th>Vulnerabilidad</th><th>Modulo</th></tr>
+          <tr><th>Endpoint</th><th>Uso</th><th>Modulo</th></tr>
+          <tr><td><code>/api/status</code></td><td>Estado normal de plataforma</td><td>API health</td></tr>
+          <tr><td><code>/api/messages</code></td><td>Mensajes internos simulados</td><td>Phishing drill</td></tr>
+          <tr><td><code>/api/security/events</code></td><td>Eventos SOC defensivos</td><td>Malware/Phishing drills</td></tr>
+          <tr><td><code>/api/incidents</code></td><td>Incidentes abiertos/cerrados</td><td>Incident Response</td></tr>
           <tr><td><code>/api/user?username=...</code></td><td>SQLi simulado con fuga de filas</td><td>SQL Injection Demonstrator</td></tr>
           <tr><td><code>/api/login</code></td><td>Password guessing sin bloqueo</td><td>Brute Force Simulator</td></tr>
           <tr><td><code>/api/search?q=...</code></td><td>Reflected XSS sin escape</td><td>XSS Payload Injector</td></tr>
@@ -94,7 +171,130 @@ app.get("/", (_req, res) => {
   `));
 });
 
+app.get("/portal", (_req, res) => {
+  res.send(page(`
+    <header>
+      <div>
+        <h1>CyberBank Operations</h1>
+        <p>Vista tipo app real: clientes, mensajes, endpoints y servicios internos.</p>
+      </div>
+      <div class="nav"><a href="/">Home</a><a href="/security">SOC</a></div>
+    </header>
+    <section class="grid">
+      <div class="panel">
+        <h2>Customers API</h2>
+        <pre>${JSON.stringify(users.map(({ password, ...user }) => user), null, 2)}</pre>
+      </div>
+      <div class="panel">
+        <h2>Messages API</h2>
+        <pre>${JSON.stringify(messages.slice(-6), null, 2)}</pre>
+      </div>
+      <div class="panel wide">
+        <h2>Endpoint Inventory</h2>
+        <pre>${JSON.stringify(endpoints, null, 2)}</pre>
+      </div>
+    </section>
+  `));
+});
+
+app.get("/security", (_req, res) => {
+  const rows = securityEvents.slice(-12).reverse().map((event) => `
+    <tr>
+      <td>${event.at}</td>
+      <td class="sev-${event.severity}">${event.severity}</td>
+      <td>${event.category}</td>
+      <td>${event.title}</td>
+      <td>${event.affected || ""}</td>
+    </tr>`).join("");
+  res.send(page(`
+    <header>
+      <div>
+        <h1>CyberBank SOC</h1>
+        <p>Esta pantalla muestra como se ve el incidente desde la app objetivo Docker.</p>
+      </div>
+      <div class="nav"><a href="/">Home</a><a href="/portal">Portal</a></div>
+    </header>
+    <section class="grid">
+      <div class="panel">
+        <h2>Incidents</h2>
+        <pre>${JSON.stringify(incidents.slice(-5), null, 2)}</pre>
+      </div>
+      <div class="panel">
+        <h2>Endpoint Risk</h2>
+        <pre>${JSON.stringify(endpoints, null, 2)}</pre>
+      </div>
+      <div class="panel wide">
+        <h2>Security Events</h2>
+        <table>
+          <tr><th>Time</th><th>Severity</th><th>Category</th><th>Title</th><th>Affected</th></tr>
+          ${rows}
+        </table>
+      </div>
+    </section>
+  `));
+});
+
 app.get("/health", (_req, res) => res.json({ status: "ok", service: "mini-vulnerable-app" }));
+
+app.get("/api/status", (_req, res) => {
+  res.json({
+    service: "CyberBank API",
+    status: "ok",
+    users: users.length,
+    endpoints: endpoints.length,
+    messages: messages.length,
+    security_events: securityEvents.length,
+    open_incidents: incidents.filter((incident) => incident.status === "open").length,
+  });
+});
+
+app.get("/api/messages", (_req, res) => res.json({ messages }));
+app.get("/api/security/events", (_req, res) => res.json({ events: securityEvents.slice(-50) }));
+app.get("/api/incidents", (_req, res) => res.json({ incidents }));
+
+app.post("/api/security/phishing-drill", (req, res) => {
+  const template = String(req.body.template || "password_reset");
+  const recipients = Number(req.body.recipients || 12);
+  const reported = Number(req.body.reported || 0);
+  const message = {
+    id: messages.length + 1,
+    from: "security-alert@cyberbank-support.local",
+    subject: template === "invoice" ? "Invoice requires urgent review" : template === "mfa_prompt" ? "MFA verification required" : "Password reset required today",
+    risk: "high",
+    status: "simulated-quarantined",
+  };
+  messages.push(message);
+  const event = recordSecurityEvent({
+    severity: "high",
+    category: "email",
+    title: `Phishing drill modeled: ${message.subject}`,
+    affected: "email,identity",
+    details: { template, recipients, reported, emails_sent: 0, credentials_collected: 0 },
+  });
+  const incident = createIncident("Phishing drill: suspicious message campaign", "high", ["email", "identity"], [event.id]);
+  res.status(201).json({ ok: true, message, event, incident });
+});
+
+app.post("/api/security/endpoint-telemetry", (req, res) => {
+  const scenario = String(req.body.scenario || "info_stealer");
+  const affectedHosts = Math.max(1, Math.min(Number(req.body.affected_hosts || 1), endpoints.length));
+  const simulateExfil = String(req.body.simulate_exfil || "no") === "yes";
+  const touched = endpoints.slice(0, affectedHosts).map((endpoint) => {
+    endpoint.status = "contained";
+    endpoint.risk = simulateExfil ? 96 : 84;
+    endpoint.last_signal = scenario;
+    return endpoint.id;
+  });
+  const event = recordSecurityEvent({
+    severity: "critical",
+    category: "endpoint",
+    title: `Malware behavior drill: ${scenario}`,
+    affected: "endpoint,identity,data",
+    details: { scenario, touched, simulated_exfiltration: simulateExfil, payload_executed: false, files_created: 0 },
+  });
+  const incident = createIncident("Malware behavior drill: endpoint containment", "critical", ["endpoint", "identity", "data"], [event.id]);
+  res.status(201).json({ ok: true, touched, event, incident });
+});
 
 app.get("/api/user", (req, res) => {
   const username = String(req.query.username || "");
@@ -159,5 +359,5 @@ Customer note</pre>
 });
 
 app.listen(port, "0.0.0.0", () => {
-  console.log(`CyberBank vulnerable target listening on ${port}`);
+  console.log(`CyberBank API target listening on ${port}`);
 });

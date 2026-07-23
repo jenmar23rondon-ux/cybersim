@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import asyncio
 
+import httpx
+
 from .base import AttackModuleBase, Emit, register
 
 
@@ -52,6 +54,29 @@ class PhishingSimulation(AttackModuleBase):
         )
         await asyncio.sleep(0.2)
 
+        target_event = None
+        try:
+            async with httpx.AsyncClient(timeout=5) as client:
+                response = await client.post(
+                    f"http://{target}:3003/api/security/phishing-drill",
+                    json={"template": template, "recipients": recipients, "reported": reported},
+                )
+                response.raise_for_status()
+                target_event = response.json()
+            await emit(
+                "info",
+                "Target API updated: CyberBank SOC received the simulated phishing incident.",
+                40,
+                {"target_api": "/api/security/phishing-drill", "incident_id": target_event.get("incident", {}).get("id")},
+            )
+        except Exception as exc:
+            await emit(
+                "warn",
+                f"Target API event could not be recorded, continuing tabletop drill: {exc}",
+                40,
+                {"target_api": "/api/security/phishing-drill"},
+            )
+
         await emit(
             "info",
             "User behavior signal: simulated users submit phishing reports to the SOC queue.",
@@ -76,6 +101,7 @@ class PhishingSimulation(AttackModuleBase):
             "report_rate": report_rate,
             "emails_sent": 0,
             "credentials_collected": 0,
+            "target_api_event": target_event,
             "recommended_actions": [
                 "Block or quarantine lookalike domains and suspicious sender patterns.",
                 "Create a user-facing report button and SOC triage queue.",

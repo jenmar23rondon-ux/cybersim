@@ -50,6 +50,8 @@ CyberSim is designed to show both sides of the story:
 | Dashboard | http://localhost:5173 | Main CyberSim interface |
 | Backend API docs | http://localhost:8000/docs | FastAPI documentation |
 | CyberBank Mini App | http://localhost:3003 | Visual vulnerable app for SQLi, XSS, brute force, scans |
+| CyberBank Portal | http://localhost:3003/portal | Normal-looking business API view |
+| CyberBank SOC | http://localhost:3003/security | Target-side security events and incident view |
 | OWASP Juice Shop | http://localhost:3002 | Industry-standard vulnerable web app |
 | Vulnerable Node API | http://localhost:3001 | Small API used by built-in attack modules |
 | DVWA | http://localhost:4280 | Classic web security practice target |
@@ -129,6 +131,19 @@ Use this flow for interviews or presentations:
 malware, encrypt files, send emails, host phishing pages, or collect
 credentials. They are included so you can demonstrate SOC detection,
 containment, and remediation workflows safely.
+
+When these drills target `mini-vuln-app`, they also call the CyberBank API:
+
+```text
+POST /api/security/phishing-drill
+POST /api/security/endpoint-telemetry
+GET  /api/security/events
+GET  /api/incidents
+```
+
+That makes the Docker target look more like a normal company API: CyberSim
+shows the attacker/analyst view, while `http://localhost:3003/security` shows
+how the same incident appears inside the target application's SOC panel.
 
 The built-in modules can target CyberBank by using:
 
