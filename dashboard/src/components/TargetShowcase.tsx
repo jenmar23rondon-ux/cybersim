@@ -38,6 +38,9 @@ export function TargetShowcase() {
           <a className="mini-link" href="http://localhost:3003" target="_blank" rel="noreferrer">
             Open CyberBank
           </a>
+          <a className="mini-link" href="http://localhost:3003/security" target="_blank" rel="noreferrer">
+            Open SOC
+          </a>
         </div>
         <div className="target-browser">
           <div className="browser-bar">
@@ -55,6 +58,9 @@ export function TargetShowcase() {
             </p>
             <a href="http://localhost:3003" target="_blank" rel="noreferrer">
               Open live vulnerable app
+            </a>
+            <a href="http://localhost:3003/security" target="_blank" rel="noreferrer">
+              Open interactive SOC
             </a>
           </div>
         </div>

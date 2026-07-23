@@ -98,6 +98,11 @@ function page(shell) {
         label { display:block; color:var(--muted); font-size:12px; margin-top:10px; }
         input, button { width:100%; border-radius:9px; border:1px solid var(--line); padding:10px; background:#081018; color:var(--text); }
         button { margin-top:12px; cursor:pointer; background:linear-gradient(90deg,var(--a),#6c5ce7); color:#06121a; font-weight:900; border:0; }
+        button.secondary { background:#0b1420; color:var(--text); border:1px solid var(--line); }
+        button.danger-action { background:linear-gradient(90deg,var(--e),#ff9f43); color:#170808; }
+        .actions { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+        .actions button { margin-top:0; }
+        .live-dot { display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--ok); box-shadow:0 0 12px var(--ok); margin-right:6px; }
         pre { overflow:auto; background:#050a10; border:1px solid var(--line); padding:12px; border-radius:10px; min-height:96px; }
         table { width:100%; border-collapse:collapse; }
         th,td { border-bottom:1px solid var(--line); text-align:left; padding:9px; vertical-align:top; }
@@ -107,7 +112,7 @@ function page(shell) {
         .sev-high { color:var(--b); font-weight:800; }
         .sev-medium { color:var(--a); font-weight:800; }
         .sev-info { color:var(--ok); font-weight:800; }
-        @media (max-width: 760px) { .grid,.cards { grid-template-columns:1fr; } header { align-items:flex-start; flex-direction:column; } }
+        @media (max-width: 760px) { .grid,.cards,.actions { grid-template-columns:1fr; } header { align-items:flex-start; flex-direction:column; } }
       </style>
     </head>
     <body><main>${shell}</main></body>
@@ -198,39 +203,101 @@ app.get("/portal", (_req, res) => {
 });
 
 app.get("/security", (_req, res) => {
-  const rows = securityEvents.slice(-12).reverse().map((event) => `
-    <tr>
-      <td>${event.at}</td>
-      <td class="sev-${event.severity}">${event.severity}</td>
-      <td>${event.category}</td>
-      <td>${event.title}</td>
-      <td>${event.affected || ""}</td>
-    </tr>`).join("");
   res.send(page(`
     <header>
       <div>
         <h1>CyberBank SOC</h1>
-        <p>Esta pantalla muestra como se ve el incidente desde la app objetivo Docker.</p>
+        <p><span class="live-dot"></span>Live target-side SOC. Esta pantalla se actualiza sola cada 2 segundos.</p>
       </div>
       <div class="nav"><a href="/">Home</a><a href="/portal">Portal</a></div>
     </header>
+    <section class="cards">
+      <div class="card"><strong>Open Incidents</strong><p id="kpi-open">0</p></div>
+      <div class="card"><strong>Critical Endpoint Risk</strong><p id="kpi-risk">0</p></div>
+      <div class="card"><strong>Security Events</strong><p id="kpi-events">0</p></div>
+    </section>
     <section class="grid">
       <div class="panel">
-        <h2>Incidents</h2>
-        <pre>${JSON.stringify(incidents.slice(-5), null, 2)}</pre>
+        <h2>Interactive Drills</h2>
+        <p>Lanza eventos seguros desde el propio target. CyberSim tambien puede generarlos desde el dashboard.</p>
+        <div class="actions">
+          <button onclick="runPhishing()">Simulate Phishing</button>
+          <button onclick="runMalware()" class="danger-action">Simulate Malware</button>
+          <button onclick="containAll()" class="secondary">Contain Endpoints</button>
+          <button onclick="resetLab()" class="secondary">Reset Lab</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Open Incidents</h2>
+        <pre id="incident-json">Loading...</pre>
       </div>
       <div class="panel">
         <h2>Endpoint Risk</h2>
-        <pre>${JSON.stringify(endpoints, null, 2)}</pre>
+        <pre id="endpoint-json">Loading...</pre>
+      </div>
+      <div class="panel">
+        <h2>Messages</h2>
+        <pre id="message-json">Loading...</pre>
       </div>
       <div class="panel wide">
         <h2>Security Events</h2>
-        <table>
-          <tr><th>Time</th><th>Severity</th><th>Category</th><th>Title</th><th>Affected</th></tr>
-          ${rows}
-        </table>
+        <table id="events-table"></table>
       </div>
     </section>
+    <script>
+      async function json(url, options) {
+        const res = await fetch(url, options);
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+      }
+      async function refresh() {
+        const [status, events, incidents, endpoints, messages] = await Promise.all([
+          json('/api/status'),
+          json('/api/security/events'),
+          json('/api/incidents'),
+          json('/api/endpoints'),
+          json('/api/messages')
+        ]);
+        document.querySelector('#kpi-open').textContent = status.open_incidents;
+        document.querySelector('#kpi-risk').textContent = endpoints.endpoints.filter((e) => e.risk >= 80).length;
+        document.querySelector('#kpi-events').textContent = status.security_events;
+        document.querySelector('#incident-json').textContent = JSON.stringify(incidents.incidents.slice(-6), null, 2);
+        document.querySelector('#endpoint-json').textContent = JSON.stringify(endpoints.endpoints, null, 2);
+        document.querySelector('#message-json').textContent = JSON.stringify(messages.messages.slice(-6), null, 2);
+        document.querySelector('#events-table').innerHTML =
+          '<tr><th>Time</th><th>Severity</th><th>Category</th><th>Title</th><th>Affected</th></tr>' +
+          events.events.slice(-14).reverse().map((event) =>
+            '<tr><td>' + event.at + '</td><td class="sev-' + event.severity + '">' + event.severity +
+            '</td><td>' + event.category + '</td><td>' + event.title + '</td><td>' + (event.affected || '') + '</td></tr>'
+          ).join('');
+      }
+      async function runPhishing() {
+        await json('/api/security/phishing-drill', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ template: 'mfa_prompt', recipients: 18, reported: 8 })
+        });
+        await refresh();
+      }
+      async function runMalware() {
+        await json('/api/security/endpoint-telemetry', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ scenario: 'ransomware_like', affected_hosts: 2, simulate_exfil: 'yes' })
+        });
+        await refresh();
+      }
+      async function containAll() {
+        await json('/api/security/contain', { method: 'POST' });
+        await refresh();
+      }
+      async function resetLab() {
+        await json('/api/security/reset', { method: 'POST' });
+        await refresh();
+      }
+      refresh();
+      setInterval(refresh, 2000);
+    </script>
   `));
 });
 
@@ -249,6 +316,7 @@ app.get("/api/status", (_req, res) => {
 });
 
 app.get("/api/messages", (_req, res) => res.json({ messages }));
+app.get("/api/endpoints", (_req, res) => res.json({ endpoints }));
 app.get("/api/security/events", (_req, res) => res.json({ events: securityEvents.slice(-50) }));
 app.get("/api/incidents", (_req, res) => res.json({ incidents }));
 
@@ -294,6 +362,44 @@ app.post("/api/security/endpoint-telemetry", (req, res) => {
   });
   const incident = createIncident("Malware behavior drill: endpoint containment", "critical", ["endpoint", "identity", "data"], [event.id]);
   res.status(201).json({ ok: true, touched, event, incident });
+});
+
+app.post("/api/security/contain", (_req, res) => {
+  endpoints.forEach((endpoint) => {
+    if (endpoint.risk >= 80) {
+      endpoint.status = "contained";
+      endpoint.last_signal = "manual containment";
+    }
+  });
+  incidents.forEach((incident) => {
+    if (incident.status === "open") incident.status = "contained";
+  });
+  const event = recordSecurityEvent({
+    severity: "medium",
+    category: "response",
+    title: "Manual containment applied from CyberBank SOC",
+    affected: "endpoint,identity",
+  });
+  res.json({ ok: true, event, endpoints, incidents });
+});
+
+app.post("/api/security/reset", (_req, res) => {
+  auditLog.length = 0;
+  incidents.length = 0;
+  messages.splice(2);
+  securityEvents.length = 0;
+  securityEvents.push({
+    id: 1,
+    severity: "info",
+    category: "system",
+    title: "CyberBank lab reset",
+    affected: "api",
+    at: new Date().toISOString(),
+  });
+  endpoints[0] = { id: "CB-WIN-014", user: "ana", status: "healthy", risk: 12, last_signal: "normal login" };
+  endpoints[1] = { id: "CB-WIN-021", user: "admin", status: "healthy", risk: 18, last_signal: "browser update" };
+  endpoints[2] = { id: "CB-LNX-API", user: "service-api", status: "healthy", risk: 20, last_signal: "api heartbeat" };
+  res.json({ ok: true, endpoints, incidents, messages, securityEvents });
 });
 
 app.get("/api/user", (req, res) => {
