@@ -174,6 +174,55 @@ GUIDES: dict[str, dict[str, Any]] = {
             "Confirm dashboards show rate-limit events instead of service crashes.",
         ],
     },
+    "malware_sim": {
+        "title": "Respond to Malware Indicators",
+        "goal": "Contain affected endpoints, preserve evidence, and remove the root cause.",
+        "applies_to": ["endpoint fleet", "EDR policy", "backup and incident response procedure"],
+        "difficulty": "hard",
+        "steps": [
+            "Isolate affected host(s) from the network without powering them off.",
+            "Collect EDR timeline, process tree, hashes, user context, and relevant logs.",
+            "Scope lateral movement by checking authentication, SMB, RDP, and admin activity.",
+            "Rotate exposed credentials and revoke sessions when credential access is suspected.",
+            "Restore from known-clean backups only after persistence and initial access are removed.",
+        ],
+        "secure_pattern": (
+            "Incident checklist:\n"
+            "1. Isolate endpoint.\n"
+            "2. Preserve evidence.\n"
+            "3. Scope users, hosts, and credentials.\n"
+            "4. Remove persistence.\n"
+            "5. Restore and monitor for recurrence."
+        ),
+        "verify": [
+            "Run Malware Behavior Simulation again.",
+            "Expected result: SOC detects the same indicators faster and containment actions are documented.",
+            "Confirm no real files or payloads are created because this is a safe drill.",
+        ],
+    },
+    "phishing_sim": {
+        "title": "Reduce Phishing Risk",
+        "goal": "Make phishing easier to report, faster to contain, and harder to convert into account takeover.",
+        "applies_to": ["email security gateway", "identity provider", "user awareness program"],
+        "difficulty": "medium",
+        "steps": [
+            "Enable SPF, DKIM, and DMARC enforcement for owned domains.",
+            "Deploy a visible phishing report button and SOC triage queue.",
+            "Block or monitor lookalike domains and suspicious sender patterns.",
+            "Use phishing-resistant MFA for privileged and sensitive users.",
+            "Run awareness drills and coach users on the indicators they missed.",
+        ],
+        "secure_pattern": (
+            "Email response flow:\n"
+            "reported_message -> header review -> recipient search -> quarantine -> "
+            "identity check -> user coaching -> detection update"
+        ),
+        "verify": [
+            "Run Phishing Awareness Simulation again.",
+            "Expected result: higher report rate and faster triage steps.",
+            "Confirm the drill sends 0 emails and collects 0 credentials.",
+        ],
+    },
 }
 
 

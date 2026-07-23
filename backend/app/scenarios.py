@@ -183,6 +183,29 @@ SCENARIOS: dict[str, dict] = {
             },
         ],
     },
+    "soc_malware_phishing_drill": {
+        "id": "soc_malware_phishing_drill",
+        "name": "SOC Malware + Phishing Drill",
+        "description": (
+            "A safe incident-response exercise: model phishing indicators, then "
+            "simulate malware behavior telemetry so analysts can practice triage, "
+            "containment, and remediation."
+        ),
+        "steps": [
+            {
+                "attack_type": "phishing_sim",
+                "target": "mini-vuln-app",
+                "params": {"template": "password_reset", "recipients": 16, "reported": 7},
+                "narrative": "Initial access drill: suspicious email indicators and user reports.",
+            },
+            {
+                "attack_type": "malware_sim",
+                "target": "mini-vuln-app",
+                "params": {"scenario": "info_stealer", "affected_hosts": 2, "simulate_exfil": "yes"},
+                "narrative": "Post-click drill: endpoint telemetry suggests credential access and blocked exfiltration.",
+            },
+        ],
+    },
 }
 
 

@@ -27,6 +27,8 @@ const ASSETS = [
   { id: "database", label: "Database/Data", detail: "Rows, secrets, balances, and query behavior." },
   { id: "browser", label: "Browser/Session", detail: "Client-side script execution and session safety." },
   { id: "availability", label: "Availability", detail: "Latency, errors, and service responsiveness." },
+  { id: "endpoint", label: "Endpoint Fleet", detail: "Workstations, processes, persistence, and local file activity." },
+  { id: "email", label: "Email/Identity", detail: "Inbox security, user reports, MFA prompts, and account takeover risk." },
 ];
 
 const ATTACK_ASSETS: Record<string, string[]> = {
@@ -37,6 +39,8 @@ const ATTACK_ASSETS: Record<string, string[]> = {
   hydra_bruteforce: ["auth"],
   xss: ["browser", "api"],
   ddos_sim: ["availability"],
+  malware_sim: ["endpoint", "auth", "database"],
+  phishing_sim: ["email", "auth", "browser"],
 };
 
 export function ImpactMap({ metrics, history, events, selectedAttack, defense, campaign, isCampaign }: Props) {

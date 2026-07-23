@@ -158,6 +158,50 @@ PLAYBOOKS: dict[str, dict[str, Any]] = {
             "Rotate weak/default credentials in lab and production baselines.",
         ],
     },
+    "malware_sim": {
+        "severity": "critical",
+        "business_impact": "Endpoint compromise can disrupt operations, expose credentials, and cause data loss.",
+        "detections": [
+            "Script interpreter burst from an unusual parent process.",
+            "Mass file modification, rename, or encryption-like behavior.",
+            "Startup persistence changes, suspicious services, or scheduled task creation.",
+            "Outbound connection attempts after credential or file-access signals.",
+        ],
+        "securewatch_query": 'source="CyberSim" attack_type="malware_sim" level IN ("warn","success")',
+        "triage": [
+            "Identify affected host, user, process tree, and first-seen timestamp.",
+            "Check whether credential stores, browser sessions, or sensitive files were touched.",
+            "Preserve evidence before cleanup and scope for lateral movement.",
+        ],
+        "remediation": [
+            "Isolate affected endpoint network access.",
+            "Reimage or clean from a trusted baseline after root cause is known.",
+            "Rotate exposed credentials and revoke active sessions.",
+            "Restore data from clean backups and add detections for observed indicators.",
+        ],
+    },
+    "phishing_sim": {
+        "severity": "high",
+        "business_impact": "Credential theft or account takeover through social engineering.",
+        "detections": [
+            "Spoofed or newly registered sender domains.",
+            "Urgent language combined with mismatched links or attachments.",
+            "Multiple user reports for similar subject lines or URLs.",
+            "Login, MFA, or password-reset anomalies after message delivery.",
+        ],
+        "securewatch_query": 'source="CyberSim" attack_type="phishing_sim"',
+        "triage": [
+            "Review reported message headers, sender, subject, and target URL.",
+            "Search for other recipients and quarantine matching messages.",
+            "Check whether any user interacted with the link or had suspicious login activity.",
+        ],
+        "remediation": [
+            "Quarantine messages and block malicious/lookalike domains.",
+            "Reset credentials only for users with exposure indicators.",
+            "Require phishing-resistant MFA on privileged and sensitive accounts.",
+            "Coach users using the exact indicators from the drill.",
+        ],
+    },
 }
 
 

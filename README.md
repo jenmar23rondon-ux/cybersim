@@ -24,7 +24,9 @@ CyberSim is designed to show both sides of the story:
 - AI Explainer with OpenAI support, plus offline fallback explanations.
 - Remediation Lab with fix steps, validation checks, and secure code patterns.
 - Impact Map that shows which areas were affected: API, auth, database, browser,
-  network, and availability.
+  network, availability, endpoint, and email/identity.
+- Safe malware and phishing drills that generate defensive telemetry without
+  payloads, email delivery, or credential collection.
 - PDF reports for individual attacks and campaigns.
 - Optional SecureWatch SIEM webhook integration.
 - Installable dashboard PWA for mobile demos.
@@ -120,6 +122,13 @@ Use this flow for interviews or presentations:
 | `ddos_sim` | `vuln-node-api` | T1498 | Low-rate capped load test for availability impact |
 | `sqlmap_juice` | `juice-shop` | T1190 | Conservative sqlmap profile against Juice Shop |
 | `hydra_bruteforce` | `weak-ssh` | T1110 | Hydra-based local credential audit |
+| `malware_sim` | `mini-vuln-app` | T1059 | Safe endpoint malware-behavior telemetry drill |
+| `phishing_sim` | `mini-vuln-app` | T1566 | Safe phishing-awareness and user-reporting drill |
+
+`malware_sim` and `phishing_sim` are simulations only. They do not create
+malware, encrypt files, send emails, host phishing pages, or collect
+credentials. They are included so you can demonstrate SOC detection,
+containment, and remediation workflows safely.
 
 The built-in modules can target CyberBank by using:
 
@@ -138,6 +147,7 @@ Port: 3003
 | Incident Response Drill | Recon -> credential pressure -> SQLi correlation |
 | Juice Shop Two-Face Demo | Scan -> sqlmap -> bounded load test |
 | Mini App Takeover Demo | Scan -> brute force -> SQLi -> XSS |
+| SOC Malware + Phishing Drill | Phishing simulation -> malware behavior simulation |
 
 Scenarios are defined in:
 

@@ -122,6 +122,39 @@ KNOWLEDGE_BASE: dict[str, dict] = {
         ],
         "mitre": {"id": "T1110", "name": "Brute Force"},
     },
+    "malware_sim": {
+        "title": "Malware Behavior Simulation",
+        "what": (
+            "CyberSim generates safe endpoint-style telemetry that resembles common "
+            "malware behaviors such as script execution, mass file changes, credential "
+            "store access, or persistence attempts. It does not run malware, create "
+            "files, encrypt data, or connect to command-and-control infrastructure."
+        ),
+        "vulnerability": "Weak endpoint controls, missing EDR coverage, and slow containment workflow.",
+        "fix": [
+            "Enable EDR rules for script interpreter abuse and persistence changes.",
+            "Use least privilege and application control on endpoints.",
+            "Isolate suspected hosts quickly while preserving evidence.",
+            "Maintain tested backups and credential/session revocation procedures.",
+        ],
+        "mitre": {"id": "T1059", "name": "Command and Scripting Interpreter"},
+    },
+    "phishing_sim": {
+        "title": "Phishing Awareness Simulation",
+        "what": (
+            "CyberSim models a phishing campaign by producing training telemetry for "
+            "suspicious sender, urgent language, mismatched links, and user reporting. "
+            "It does not send email, host deceptive pages, or collect credentials."
+        ),
+        "vulnerability": "Human-targeted social engineering and weak email/account protections.",
+        "fix": [
+            "Use phishing-resistant MFA for sensitive accounts.",
+            "Deploy email filtering, domain authentication, and lookalike-domain monitoring.",
+            "Give users an easy report button and run recurring awareness drills.",
+            "Alert on impossible travel, suspicious MFA prompts, and credential resets.",
+        ],
+        "mitre": {"id": "T1566", "name": "Phishing"},
+    },
 }
 
 
