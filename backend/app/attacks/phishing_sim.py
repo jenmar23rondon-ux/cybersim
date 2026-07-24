@@ -30,6 +30,13 @@ class PhishingSimulation(AttackModuleBase):
         },
         "recipients": {"type": "int", "label": "Simulated recipients", "default": 12, "max": 50},
         "reported": {"type": "int", "label": "Users who report it", "default": 5, "max": 50},
+        "scheme": {
+            "type": "select",
+            "label": "Target scheme",
+            "default": "http",
+            "options": ["http", "https"],
+        },
+        "port": {"type": "int", "label": "Target port", "default": 3003},
     }
 
     async def run(self, target: str, params: dict, emit: Emit) -> dict:
@@ -37,6 +44,7 @@ class PhishingSimulation(AttackModuleBase):
         recipients = max(1, min(int(params.get("recipients", 12)), 50))
         reported = max(0, min(int(params.get("reported", 5)), recipients))
         report_rate = round((reported / recipients) * 100, 1)
+        origin = _target_origin(target, params)
 
         await emit(
             "info",
@@ -58,7 +66,7 @@ class PhishingSimulation(AttackModuleBase):
         try:
             async with httpx.AsyncClient(timeout=5) as client:
                 response = await client.post(
-                    f"http://{target}:3003/api/security/phishing-drill",
+                    f"{origin}/api/security/phishing-drill",
                     json={"template": template, "recipients": recipients, "reported": reported},
                 )
                 response.raise_for_status()
@@ -67,14 +75,14 @@ class PhishingSimulation(AttackModuleBase):
                 "info",
                 "Target API updated: CyberBank SOC received the simulated phishing incident.",
                 40,
-                {"target_api": "/api/security/phishing-drill", "incident_id": target_event.get("incident", {}).get("id")},
+                {"target_api": f"{origin}/api/security/phishing-drill", "incident_id": target_event.get("incident", {}).get("id")},
             )
         except Exception as exc:
             await emit(
                 "warn",
                 f"Target API event could not be recorded, continuing tabletop drill: {exc}",
                 40,
-                {"target_api": "/api/security/phishing-drill"},
+                {"target_api": f"{origin}/api/security/phishing-drill"},
             )
 
         await emit(
@@ -116,3 +124,11 @@ class PhishingSimulation(AttackModuleBase):
             result,
         )
         return result
+
+
+def _target_origin(target: str, params: dict) -> str:
+    scheme = str(params.get("scheme", "http")).lower()
+    port = int(params.get("port", 443 if scheme == "https" else 3003))
+    default_port = 443 if scheme == "https" else 80
+    suffix = "" if port == default_port else f":{port}"
+    return f"{scheme}://{target}{suffix}"

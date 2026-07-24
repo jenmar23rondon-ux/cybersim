@@ -3,7 +3,7 @@ import { api } from "../api";
 import type { TargetProfile, TargetProbe } from "../types";
 
 interface Props {
-  onApply: (target: { host: string; port: number }) => void;
+  onApply: (target: { host: string; port: number; scheme?: string }) => void;
 }
 
 const STORAGE_KEY = "cybersim.targetProfiles";
@@ -72,7 +72,7 @@ export function TargetConnector({ onApply }: Props) {
     };
     const next = [profile, ...profiles.filter((item) => item.host !== profile.host || item.port !== profile.port)].slice(0, 6);
     saveProfiles(next);
-    onApply({ host: profile.host, port: profile.port });
+    onApply({ host: profile.host, port: profile.port, scheme: profile.scheme });
   };
 
   const removeProfile = (profile: TargetProfile) => {
@@ -83,6 +83,7 @@ export function TargetConnector({ onApply }: Props) {
     onApply({
       host: normalizeLaunchHost(profile.host, profile.port),
       port: profile.port,
+      scheme: profile.scheme,
     });
   };
 

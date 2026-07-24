@@ -50,7 +50,7 @@ export default function App() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [isCampaign, setIsCampaign] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [connectedTarget, setConnectedTarget] = useState<{ host: string; port: number } | null>(null);
+  const [connectedTarget, setConnectedTarget] = useState<{ host: string; port: number; scheme?: string } | null>(null);
 
   const { events, connected } = useAttackSocket(correlationId);
 

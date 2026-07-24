@@ -4,7 +4,7 @@ import type { AttackModule } from "../types";
 interface Props {
   module: AttackModule | null;
   launching: boolean;
-  targetOverride: { host: string; port: number } | null;
+  targetOverride: { host: string; port: number; scheme?: string } | null;
   onLaunch: (target: string, params: Record<string, any>) => void;
 }
 
@@ -21,6 +21,9 @@ export function LaunchPanel({ module, launching, targetOverride, onLaunch }: Pro
     }
     if (targetOverride?.port && "port" in (module.params_schema || {})) {
       defaults.port = targetOverride.port;
+    }
+    if (targetOverride?.scheme && "scheme" in (module.params_schema || {})) {
+      defaults.scheme = targetOverride.scheme;
     }
     setParams(defaults);
   }, [module, targetOverride]);

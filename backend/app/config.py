@@ -19,6 +19,9 @@ class Settings(BaseSettings):
         "localhost,127.0.0.1,cybersim-dvwa,cybersim-vuln-node,"
         "cybersim-mini-vuln,cybersim-weak-ssh,cybersim-juice-shop"
     )
+    # Optional public cloud lab targets owned by you, e.g. a Railway-hosted
+    # CyberBank Docker target. Must be exact hostnames, never broad domains.
+    cloud_target_allowlist: str = ""
 
     @property
     def async_database_url(self) -> str:
@@ -37,7 +40,8 @@ class Settings(BaseSettings):
 
     @property
     def allowlist(self) -> set[str]:
-        return {h.strip().lower() for h in self.target_allowlist.split(",") if h.strip()}
+        configured = f"{self.target_allowlist},{self.cloud_target_allowlist}"
+        return {h.strip().lower() for h in configured.split(",") if h.strip()}
 
 
 @lru_cache
