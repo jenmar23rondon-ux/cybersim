@@ -67,6 +67,20 @@ weak-ssh:22
 dvwa:80
 ```
 
+### Deploy CyberBank Target to Railway
+
+If Railway deploys the repository root instead of the target folder, add these
+variables to the Railway service that represents the target:
+
+```env
+RAILWAY_DOCKERFILE_PATH=Dockerfile.railway-mini-vulnerable-app
+PORT=3003
+NODE_ENV=production
+```
+
+This tells Railway to build the cloud target with the dedicated Dockerfile while
+still using the full GitHub repository as the build context.
+
 ## Quick Start
 
 ### Windows

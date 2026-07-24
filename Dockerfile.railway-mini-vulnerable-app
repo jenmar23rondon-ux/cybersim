@@ -1,0 +1,10 @@
+FROM node:20-alpine
+
+WORKDIR /app
+COPY targets/mini-vulnerable-app/package.json ./
+RUN npm install --omit=dev
+COPY targets/mini-vulnerable-app/server.js ./
+
+ENV NODE_ENV=production
+EXPOSE 3003
+CMD ["node", "server.js"]
