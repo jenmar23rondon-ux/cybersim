@@ -127,6 +127,26 @@ Use this flow for interviews or presentations:
 8. Use **Remediation Lab** to show how the vulnerability should be fixed.
 9. Download the PDF report.
 
+## Screenshots
+
+These screenshots are captured from a running CyberSim Docker lab.
+
+### CyberSim Dashboard
+
+![CyberSim dashboard with live metrics and impact map](docs/screenshots/cybersim-dashboard-current.png)
+
+### CyberBank Target
+
+![CyberBank target home page running as a Docker lab app](docs/screenshots/cyberbank-target-home.png)
+
+### CyberBank API Portal
+
+![CyberBank API portal with users, messages, and endpoints](docs/screenshots/cyberbank-api-portal.png)
+
+### CyberBank SOC
+
+![CyberBank interactive SOC with phishing and malware drill events](docs/screenshots/cyberbank-soc-live.png)
+
 ## Attack Modules
 
 | Module | Default target | MITRE | What it demonstrates |
