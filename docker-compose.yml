@@ -59,6 +59,7 @@ services:
       # Vite reads these at build/runtime; point the browser at the backend.
       VITE_API_URL: http://localhost:8000
       VITE_WS_URL: ws://localhost:8000
+      VITE_CLOUD_TARGET_URL: ${VITE_CLOUD_TARGET_URL:-}
     ports:
       - "5173:5173"
     depends_on:

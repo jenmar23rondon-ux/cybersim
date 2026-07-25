@@ -31,6 +31,7 @@ import { TargetConnector } from "./components/TargetConnector";
 
 type Status = "running" | "success" | "failed";
 type Mode = "single" | "scenario";
+const CLOUD_TARGET_URL = import.meta.env.VITE_CLOUD_TARGET_URL || "";
 
 export default function App() {
   const [mode, setMode] = useState<Mode>("single");
@@ -179,7 +180,15 @@ export default function App() {
 
       <MetricsStrip metrics={metrics} />
 
-      <TargetShowcase />
+      <TargetShowcase
+        cloudTargetUrl={CLOUD_TARGET_URL}
+        onUseCloudTarget={(target) => {
+          setMode("single");
+          setSelectedId("phishing_sim");
+          setConnectedTarget(target);
+          setActiveDefense(null);
+        }}
+      />
 
       <ImpactMap
         metrics={metrics}

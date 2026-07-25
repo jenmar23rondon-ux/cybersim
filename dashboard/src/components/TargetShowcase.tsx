@@ -25,43 +25,84 @@ const TARGETS = [
   },
 ];
 
-export function TargetShowcase() {
+interface Props {
+  cloudTargetUrl?: string;
+  onUseCloudTarget?: (target: { host: string; port: number; scheme: string }) => void;
+}
+
+export function TargetShowcase({ cloudTargetUrl, onUseCloudTarget }: Props) {
+  const cloud = parseTargetUrl(cloudTargetUrl);
+  const primaryUrl = cloud?.origin || "http://localhost:3003";
+  const primarySoc = `${primaryUrl}/security`;
+
   return (
     <div className="showcase">
       <div className="panel vulnerable-face">
         <div className="section-title">
-          <h2>Vulnerable Face</h2>
+          <h2>{cloud ? "Cloud Docker Target" : "Vulnerable Face"}</h2>
           <div className="spacer" />
           <a className="mini-link" href="http://localhost:3002" target="_blank" rel="noreferrer">
             Open Juice Shop
           </a>
-          <a className="mini-link" href="http://localhost:3003" target="_blank" rel="noreferrer">
+          <a className="mini-link" href={primaryUrl} target="_blank" rel="noreferrer">
             Open CyberBank
           </a>
-          <a className="mini-link" href="http://localhost:3003/security" target="_blank" rel="noreferrer">
+          <a className="mini-link" href={primarySoc} target="_blank" rel="noreferrer">
             Open SOC
           </a>
         </div>
+        {cloud && (
+          <div className="cloud-flow">
+            <div>
+              <strong>CyberSim attacker</strong>
+              <span>localhost:5173</span>
+            </div>
+            <b>→</b>
+            <div className="active">
+              <strong>Railway Docker</strong>
+              <span>{cloud.host}</span>
+            </div>
+            <b>→</b>
+            <div>
+              <strong>CyberBank SOC</strong>
+              <span>/security</span>
+            </div>
+          </div>
+        )}
         <div className="target-browser">
           <div className="browser-bar">
             <span />
             <span />
             <span />
-            <code>http://localhost:3003</code>
+            <code>{primaryUrl}</code>
           </div>
           <div className="browser-body">
-            <strong>CyberBank Mini App is running as a vulnerable Docker target.</strong>
+            <strong>
+              {cloud
+                ? "CyberBank is running as your Railway Docker target."
+                : "CyberBank Mini App is running as a vulnerable Docker target."}
+            </strong>
             <p>
-              Open it in a second tab or side-by-side window while CyberSim runs
-              SQL injection, XSS, brute force, scans, and bounded load tests from
-              the attack console.
+              {cloud
+                ? "Use the cloud target for safe phishing and malware-behavior drills so other people can see the target SOC update outside your local machine."
+                : "Open it in a second tab or side-by-side window while CyberSim runs SQL injection, XSS, brute force, scans, and bounded load tests from the attack console."}
             </p>
-            <a href="http://localhost:3003" target="_blank" rel="noreferrer">
-              Open live vulnerable app
-            </a>
-            <a href="http://localhost:3003/security" target="_blank" rel="noreferrer">
-              Open interactive SOC
-            </a>
+            <div className="target-actions">
+              <a href={primaryUrl} target="_blank" rel="noreferrer">
+                Open target app
+              </a>
+              <a href={primarySoc} target="_blank" rel="noreferrer">
+                Open target SOC
+              </a>
+              {cloud && onUseCloudTarget && (
+                <button
+                  type="button"
+                  onClick={() => onUseCloudTarget({ host: cloud.host, port: cloud.port, scheme: cloud.scheme })}
+                >
+                  Use cloud target
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -83,4 +124,21 @@ export function TargetShowcase() {
       </div>
     </div>
   );
+}
+
+function parseTargetUrl(value?: string) {
+  if (!value) return null;
+  try {
+    const parsed = new URL(value);
+    const scheme = parsed.protocol.replace(":", "") || "https";
+    const port = parsed.port ? Number(parsed.port) : scheme === "https" ? 443 : 80;
+    return {
+      origin: parsed.origin,
+      host: parsed.hostname,
+      port,
+      scheme,
+    };
+  } catch {
+    return null;
+  }
 }

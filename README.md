@@ -81,6 +81,24 @@ NODE_ENV=production
 This tells Railway to build the cloud target with the dedicated Dockerfile while
 still using the full GitHub repository as the build context.
 
+After Railway gives you the public target URL, configure CyberSim with both the
+exact hostname for the backend safety guard and the full URL for the dashboard:
+
+```env
+CLOUD_TARGET_ALLOWLIST=your-cyberbank-target.up.railway.app
+VITE_CLOUD_TARGET_URL=https://your-cyberbank-target.up.railway.app
+```
+
+When `VITE_CLOUD_TARGET_URL` is set, the dashboard shows a **Cloud Docker
+Target** panel with the flow:
+
+```text
+CyberSim attacker -> Railway Docker -> CyberBank SOC
+```
+
+Use **Use cloud target** in that panel to automatically configure safe phishing
+and malware-behavior drills against the Railway Docker target.
+
 ## Quick Start
 
 ### Windows
