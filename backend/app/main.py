@@ -118,24 +118,35 @@ async def probe_target(req: TargetProbeRequest):
     port = parsed.port or (443 if parsed.scheme == "https" else 80)
     scheme = parsed.scheme or "http"
     path = req.path if req.path.startswith("/") else f"/{req.path}"
-    probe_host = _docker_probe_host(host, port)
-    attack_host = probe_host
-    probe_url = f"{scheme}://{probe_host}:{port}{path}"
+    probe_hosts = _probe_hosts(host, port)
+    attack_host = probe_hosts[0]
 
+    last_error = None
+    attempted_urls = []
     try:
         async with httpx.AsyncClient(timeout=5, follow_redirects=True) as client:
-            response = await client.get(probe_url)
+            for probe_host in probe_hosts:
+                probe_url = f"{scheme}://{probe_host}:{port}{path}"
+                attempted_urls.append(probe_url)
+                try:
+                    response = await client.get(probe_url)
+                    break
+                except Exception as exc:
+                    last_error = exc
+            else:
+                raise last_error or RuntimeError("Target probe failed")
     except Exception as exc:
         return {
             "ok": False,
             "host": host,
             "attack_host": attack_host,
-            "probe_host": probe_host,
+            "probe_host": probe_hosts[-1],
             "port": port,
             "scheme": scheme,
-            "probe_url": probe_url,
+            "probe_url": attempted_urls[-1] if attempted_urls else "",
+            "attempted_urls": attempted_urls,
             "details": details,
-            "error": str(exc),
+            "error": _friendly_probe_error(host, str(exc)),
         }
 
     return {
@@ -146,17 +157,31 @@ async def probe_target(req: TargetProbeRequest):
         "port": port,
         "scheme": scheme,
         "probe_url": probe_url,
+        "attempted_urls": attempted_urls,
         "status_code": response.status_code,
         "content_type": response.headers.get("content-type", ""),
         "details": details,
     }
 
 
-def _docker_probe_host(host: str, port: int) -> str:
+def _probe_hosts(host: str, port: int) -> list[str]:
     """Translate browser-local URLs into addresses reachable from containers."""
     if host in {"localhost", "127.0.0.1"}:
-        return LOCAL_PORT_TARGETS.get(port, "host.docker.internal")
-    return host
+        return [LOCAL_PORT_TARGETS.get(port, "host.docker.internal"), host]
+    if host in LOCAL_PORT_TARGETS.values():
+        return [host, "host.docker.internal", "localhost"]
+    return [host]
+
+
+def _friendly_probe_error(host: str, error: str) -> str:
+    if host in LOCAL_PORT_TARGETS.values():
+        return (
+            f"{host} could not be resolved from this backend. "
+            "Use this Docker hostname only when the backend runs inside the local Docker Compose network. "
+            "For Railway/cloud, paste the public target URL instead, for example https://your-target.up.railway.app. "
+            f"Original error: {error}"
+        )
+    return error
 
 
 @app.post("/api/attacks")
