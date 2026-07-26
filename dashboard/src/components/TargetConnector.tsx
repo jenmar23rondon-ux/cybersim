@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../api";
+import { API_URL, api } from "../api";
 import type { TargetProfile, TargetProbe } from "../types";
 
 interface Props {
@@ -8,6 +8,9 @@ interface Props {
 
 const STORAGE_KEY = "cybersim.targetProfiles";
 const CLOUD_TARGET_URL = import.meta.env.VITE_CLOUD_TARGET_URL || "";
+const API_IS_LOCAL = API_URL.includes("localhost") || API_URL.includes("127.0.0.1");
+const DEFAULT_TARGET_URL = CLOUD_TARGET_URL || (API_IS_LOCAL ? "http://mini-vuln-app:3003" : "");
+const TARGET_PLACEHOLDER = API_IS_LOCAL ? "http://mini-vuln-app:3003" : "https://your-target.up.railway.app";
 const LOCAL_PORT_TARGETS: Record<number, string> = {
   3001: "vuln-node-api",
   3002: "juice-shop",
@@ -17,8 +20,8 @@ const LOCAL_PORT_TARGETS: Record<number, string> = {
 };
 
 export function TargetConnector({ onApply }: Props) {
-  const [name, setName] = useState(CLOUD_TARGET_URL ? "CyberBank cloud Docker" : "CyberBank local app");
-  const [url, setUrl] = useState(CLOUD_TARGET_URL || "http://mini-vuln-app:3003");
+  const [name, setName] = useState(API_IS_LOCAL ? "CyberBank local app" : "CyberBank cloud Docker");
+  const [url, setUrl] = useState(DEFAULT_TARGET_URL);
   const [healthPath, setHealthPath] = useState("/health");
   const [profiles, setProfiles] = useState<TargetProfile[]>([]);
   const [probe, setProbe] = useState<TargetProbe | null>(null);
@@ -97,8 +100,15 @@ export function TargetConnector({ onApply }: Props) {
       </div>
 
       <p className="muted">
-        Connect your local Docker target or your Railway CyberBank Docker, verify it is reachable, then apply it to the selected attack.
+        {API_IS_LOCAL
+          ? "Connect your local Docker target, verify it is reachable, then apply it to the selected attack."
+          : "Paste the public Railway URL for your CyberBank Docker, verify it is reachable, then apply it to the selected attack."}
       </p>
+      {!API_IS_LOCAL && !CLOUD_TARGET_URL && (
+        <div className="connector-hint">
+          Cloud mode cannot resolve Docker hostnames like mini-vuln-app. Use the public target URL from Railway Networking.
+        </div>
+      )}
 
       <div className="connector-form">
         <div>
@@ -107,7 +117,7 @@ export function TargetConnector({ onApply }: Props) {
         </div>
         <div>
           <label>App URL or Docker host</label>
-          <input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="http://mini-vuln-app:3003" />
+          <input value={url} onChange={(event) => setUrl(event.target.value)} placeholder={TARGET_PLACEHOLDER} />
         </div>
         <div>
           <label>Health path</label>
