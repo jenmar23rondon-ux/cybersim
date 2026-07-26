@@ -9,7 +9,9 @@ interface Props {
 const STORAGE_KEY = "cybersim.targetProfiles";
 const CLOUD_TARGET_URL = import.meta.env.VITE_CLOUD_TARGET_URL || "";
 const API_IS_LOCAL = API_URL.includes("localhost") || API_URL.includes("127.0.0.1");
-const DEFAULT_TARGET_URL = CLOUD_TARGET_URL || (API_IS_LOCAL ? "http://mini-vuln-app:3003" : "");
+const LOCAL_DOCKER_HOSTS = new Set(["mini-vuln-app", "vuln-node-api", "juice-shop", "dvwa", "weak-ssh"]);
+const CLOUD_TARGET_IS_DOCKER_HOST = isDockerOnlyUrl(CLOUD_TARGET_URL);
+const DEFAULT_TARGET_URL = CLOUD_TARGET_IS_DOCKER_HOST ? "" : CLOUD_TARGET_URL || (API_IS_LOCAL ? "http://mini-vuln-app:3003" : "");
 const TARGET_PLACEHOLDER = API_IS_LOCAL ? "http://mini-vuln-app:3003" : "https://your-target.up.railway.app";
 const LOCAL_PORT_TARGETS: Record<number, string> = {
   3001: "vuln-node-api",
@@ -42,7 +44,20 @@ export function TargetConnector({ onApply }: Props) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   };
 
+  const cloudDockerHostError = () => {
+    if (!API_IS_LOCAL && isDockerOnlyUrl(url)) {
+      return "Estas en modo cloud: pega la URL publica de Railway del Docker CyberBank, no el hostname interno mini-vuln-app.";
+    }
+    return null;
+  };
+
   const testConnection = async () => {
+    const validationError = cloudDockerHostError();
+    if (validationError) {
+      setProbe(null);
+      setError(validationError);
+      return null;
+    }
     setChecking(true);
     setError(null);
     setProbe(null);
@@ -104,9 +119,10 @@ export function TargetConnector({ onApply }: Props) {
           ? "Connect your local Docker target, verify it is reachable, then apply it to the selected attack."
           : "Paste the public Railway URL for your CyberBank Docker, verify it is reachable, then apply it to the selected attack."}
       </p>
-      {!API_IS_LOCAL && !CLOUD_TARGET_URL && (
+      {!API_IS_LOCAL && (!CLOUD_TARGET_URL || CLOUD_TARGET_IS_DOCKER_HOST) && (
         <div className="connector-hint">
           Cloud mode cannot resolve Docker hostnames like mini-vuln-app. Use the public target URL from Railway Networking.
+          {CLOUD_TARGET_IS_DOCKER_HOST && " Your VITE_CLOUD_TARGET_URL is currently pointing to a local Docker hostname."}
         </div>
       )}
 
@@ -170,4 +186,14 @@ function normalizeLaunchHost(host: string, port: number) {
     return LOCAL_PORT_TARGETS[port] || "host.docker.internal";
   }
   return host;
+}
+
+function isDockerOnlyUrl(value: string) {
+  if (!value) return false;
+  try {
+    const parsed = new URL(value.includes("://") ? value : `http://${value}`);
+    return LOCAL_DOCKER_HOSTS.has(parsed.hostname);
+  } catch {
+    return LOCAL_DOCKER_HOSTS.has(value.split(":")[0]);
+  }
 }
