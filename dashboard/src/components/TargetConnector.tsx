@@ -7,6 +7,7 @@ interface Props {
 }
 
 const STORAGE_KEY = "cybersim.targetProfiles";
+const CLOUD_TARGET_URL = import.meta.env.VITE_CLOUD_TARGET_URL || "";
 const LOCAL_PORT_TARGETS: Record<number, string> = {
   3001: "vuln-node-api",
   3002: "juice-shop",
@@ -16,8 +17,8 @@ const LOCAL_PORT_TARGETS: Record<number, string> = {
 };
 
 export function TargetConnector({ onApply }: Props) {
-  const [name, setName] = useState("CyberBank local app");
-  const [url, setUrl] = useState("http://mini-vuln-app:3003");
+  const [name, setName] = useState(CLOUD_TARGET_URL ? "CyberBank cloud Docker" : "CyberBank local app");
+  const [url, setUrl] = useState(CLOUD_TARGET_URL || "http://mini-vuln-app:3003");
   const [healthPath, setHealthPath] = useState("/health");
   const [profiles, setProfiles] = useState<TargetProfile[]>([]);
   const [probe, setProbe] = useState<TargetProbe | null>(null);
@@ -92,11 +93,11 @@ export function TargetConnector({ onApply }: Props) {
       <div className="section-title">
         <h2>Target Connector</h2>
         <div className="spacer" />
-        <span className="connector-guard">Local / allowlisted only</span>
+        <span className="connector-guard">Lab / allowlisted only</span>
       </div>
 
       <p className="muted">
-        Connect another authorized app, verify it is reachable from the lab, then apply it to the selected attack.
+        Connect your local Docker target or your Railway CyberBank Docker, verify it is reachable, then apply it to the selected attack.
       </p>
 
       <div className="connector-form">

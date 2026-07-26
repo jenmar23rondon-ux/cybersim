@@ -1,6 +1,22 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+BASE_TARGET_ALLOWLIST = {
+    "dvwa",
+    "vuln-node-api",
+    "mini-vuln-app",
+    "weak-ssh",
+    "juice-shop",
+    "juice-shop-target",
+    "localhost",
+    "127.0.0.1",
+    "cybersim-dvwa",
+    "cybersim-vuln-node",
+    "cybersim-mini-vuln",
+    "cybersim-weak-ssh",
+    "cybersim-juice-shop",
+}
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -41,7 +57,8 @@ class Settings(BaseSettings):
     @property
     def allowlist(self) -> set[str]:
         configured = f"{self.target_allowlist},{self.cloud_target_allowlist}"
-        return {h.strip().lower() for h in configured.split(",") if h.strip()}
+        extra = {h.strip().lower() for h in configured.split(",") if h.strip()}
+        return BASE_TARGET_ALLOWLIST | extra
 
 
 @lru_cache
