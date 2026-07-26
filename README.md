@@ -67,27 +67,73 @@ weak-ssh:22
 dvwa:80
 ```
 
-### Deploy CyberBank Target to Railway
+### Deploy CyberSim to Railway
+
+CyberSim uses three public services when you want the demo to work in the
+cloud:
+
+```text
+dashboard  -> public UI
+backend    -> FastAPI attacker/orchestrator
+target     -> CyberBank vulnerable Docker owned by you
+```
+
+Do not use Docker hostnames such as `mini-vuln-app` in cloud variables. Those
+names only exist inside local Docker Compose.
+
+#### 1. Backend service
+
+Root directory:
+
+```text
+backend
+```
+
+Variables:
+
+```env
+DATABASE_URL="${{Postgres.DATABASE_URL}}"
+OPENAI_API_KEY=""
+OPENAI_MODEL="gpt-4o-mini"
+SECUREWATCH_WEBHOOK_URL=""
+SECUREWATCH_API_KEY=""
+TARGET_ALLOWLIST="localhost,127.0.0.1"
+CLOUD_TARGET_ALLOWLIST="your-cyberbank-target.up.railway.app"
+```
+
+`CLOUD_TARGET_ALLOWLIST` must be only the hostname, without `https://`.
+
+#### 2. Dashboard service
+
+Root directory:
+
+```text
+dashboard
+```
+
+Variables:
+
+```env
+VITE_API_URL="https://your-cybersim-backend.up.railway.app"
+VITE_CLOUD_TARGET_URL="https://your-cyberbank-target.up.railway.app"
+```
+
+`VITE_WS_URL` is optional. If you leave it blank, the dashboard derives the
+WebSocket URL from `VITE_API_URL`.
+
+#### 3. CyberBank target service
 
 If Railway deploys the repository root instead of the target folder, add these
 variables to the Railway service that represents the target:
 
 ```env
 RAILWAY_DOCKERFILE_PATH=Dockerfile.railway-mini-vulnerable-app
-PORT=3003
 NODE_ENV=production
 ```
 
 This tells Railway to build the cloud target with the dedicated Dockerfile while
-still using the full GitHub repository as the build context.
-
-After Railway gives you the public target URL, configure CyberSim with both the
-exact hostname for the backend safety guard and the full URL for the dashboard:
-
-```env
-CLOUD_TARGET_ALLOWLIST=your-cyberbank-target.up.railway.app
-VITE_CLOUD_TARGET_URL=https://your-cyberbank-target.up.railway.app
-```
+still using the full GitHub repository as the build context. Railway injects
+`PORT` automatically; the target listens on that value.
 
 When `VITE_CLOUD_TARGET_URL` is set, the dashboard shows a **Cloud Docker
 Target** panel with the flow:
@@ -358,6 +404,10 @@ Copy `.env.example` to `.env` and adjust as needed.
 | `SECUREWATCH_WEBHOOK_URL` | No | SIEM webhook URL |
 | `SECUREWATCH_API_KEY` | No | SIEM API key |
 | `TARGET_ALLOWLIST` | Yes | Comma-separated local targets accepted by the safety guard |
+| `CLOUD_TARGET_ALLOWLIST` | Cloud only | Exact public hostnames for owned Railway target services |
+| `VITE_API_URL` | Cloud dashboard | Public backend URL used by the dashboard |
+| `VITE_CLOUD_TARGET_URL` | Cloud dashboard | Full public CyberBank target URL |
+| `VITE_WS_URL` | No | Optional explicit WebSocket URL |
 
 ## Validation
 
