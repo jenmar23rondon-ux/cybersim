@@ -45,10 +45,22 @@ export function TargetConnector({ onApply }: Props) {
   };
 
   const cloudDockerHostError = () => {
+    if (!url.trim()) {
+      return "Pega la URL publica real de Railway del CyberBank target. No puede quedar vacio.";
+    }
+    if (isPlaceholderUrl(url)) {
+      return "Esa es solo una URL de ejemplo. Reemplazala por la URL real de Railway de tu CyberBank target.";
+    }
     if (!API_IS_LOCAL && isDockerOnlyUrl(url)) {
       return "Estas en modo cloud: pega la URL publica de Railway del Docker CyberBank, no el hostname interno mini-vuln-app.";
     }
     return null;
+  };
+
+  const updateUrl = (nextUrl: string) => {
+    setUrl(nextUrl);
+    setProbe(null);
+    setError(null);
   };
 
   const testConnection = async () => {
@@ -133,7 +145,7 @@ export function TargetConnector({ onApply }: Props) {
         </div>
         <div>
           <label>App URL or Docker host</label>
-          <input value={url} onChange={(event) => setUrl(event.target.value)} placeholder={TARGET_PLACEHOLDER} />
+          <input value={url} onChange={(event) => updateUrl(event.target.value)} placeholder={TARGET_PLACEHOLDER} />
         </div>
         <div>
           <label>Health path</label>
@@ -196,4 +208,9 @@ function isDockerOnlyUrl(value: string) {
   } catch {
     return LOCAL_DOCKER_HOSTS.has(value.split(":")[0]);
   }
+}
+
+function isPlaceholderUrl(value: string) {
+  const normalized = value.trim().toLowerCase();
+  return normalized.includes("your-target") || normalized.includes("your-cyberbank-target");
 }

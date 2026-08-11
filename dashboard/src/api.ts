@@ -11,48 +11,62 @@ async function j<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function request<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+  try {
+    const res = await fetch(input, init);
+    return j<T>(res);
+  } catch (err: any) {
+    if (err instanceof TypeError) {
+      throw new Error(
+        `No se pudo conectar con el backend (${API_URL}). Revisa que VITE_API_URL apunte al servicio backend publico y que ese backend este online.`
+      );
+    }
+    throw err;
+  }
+}
+
 export const api = {
-  modules: () => fetch(`${API_URL}/api/modules`).then((r) => j<AttackModule[]>(r)),
+  modules: () => request<AttackModule[]>(`${API_URL}/api/modules`),
 
-  metrics: () => fetch(`${API_URL}/api/metrics`).then((r) => j<Metrics>(r)),
+  metrics: () => request<Metrics>(`${API_URL}/api/metrics`),
 
-  playbooks: () => fetch(`${API_URL}/api/defense/playbooks`).then((r) => j<DefensePlaybook[]>(r)),
+  playbooks: () => request<DefensePlaybook[]>(`${API_URL}/api/defense/playbooks`),
 
   remediationGuides: () =>
-    fetch(`${API_URL}/api/remediation/guides`).then((r) => j<RemediationGuide[]>(r)),
+    request<RemediationGuide[]>(`${API_URL}/api/remediation/guides`),
 
   probeTarget: (url: string, path: string) =>
-    fetch(`${API_URL}/api/targets/probe`, {
+    request<TargetProbe>(`${API_URL}/api/targets/probe`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url, path }),
-    }).then((r) => j<TargetProbe>(r)),
+    }),
 
   launch: (attack_type: string, target: string, params: Record<string, any>) =>
-    fetch(`${API_URL}/api/attacks`, {
+    request<{ correlation_id: string; status: string }>(`${API_URL}/api/attacks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ attack_type, target, params }),
-    }).then((r) => j<{ correlation_id: string; status: string }>(r)),
+    }),
 
-  history: () => fetch(`${API_URL}/api/attacks`).then((r) => j<AttackRun[]>(r)),
+  history: () => request<AttackRun[]>(`${API_URL}/api/attacks`),
 
-  run: (id: string) => fetch(`${API_URL}/api/attacks/${id}`).then((r) => j<AttackRun>(r)),
+  run: (id: string) => request<AttackRun>(`${API_URL}/api/attacks/${id}`),
 
   reportUrl: (id: string) => `${API_URL}/api/attacks/${id}/report`,
 
   // --- Guided scenarios / auto-campaigns ---
-  scenarios: () => fetch(`${API_URL}/api/scenarios`).then((r) => j<Scenario[]>(r)),
+  scenarios: () => request<Scenario[]>(`${API_URL}/api/scenarios`),
 
   launchCampaign: (scenario_id: string) =>
-    fetch(`${API_URL}/api/campaigns`, {
+    request<{ campaign_id: string; status: string }>(`${API_URL}/api/campaigns`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ scenario_id }),
-    }).then((r) => j<{ campaign_id: string; status: string }>(r)),
+    }),
 
   campaign: (id: string) =>
-    fetch(`${API_URL}/api/campaigns/${id}`).then((r) => j<Campaign>(r)),
+    request<Campaign>(`${API_URL}/api/campaigns/${id}`),
 
   campaignReportUrl: (id: string) => `${API_URL}/api/campaigns/${id}/report`,
 };
