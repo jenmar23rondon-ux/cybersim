@@ -138,6 +138,26 @@ PLAYBOOKS: dict[str, dict[str, Any]] = {
             "Ignore client-controlled permission fields.",
         ],
     },
+    "bug_bounty_review": {
+        "severity": "high",
+        "business_impact": "A consolidated bug bounty review helps prioritize exploitable weaknesses before release.",
+        "detections": [
+            "Read-only checks touching object access, search, user lookup, and admin baseline routes.",
+            "Evidence grouped by category, severity, endpoint, and remediation.",
+            "No target-side state changes expected from this review.",
+        ],
+        "securewatch_query": 'source="CyberSim" attack_type="bug_bounty_review"',
+        "triage": [
+            "Sort findings by severity and business impact.",
+            "Validate each finding owner and affected endpoint.",
+            "Turn each proof marker into a regression test.",
+        ],
+        "remediation": [
+            "Fix authorization issues before output encoding or informational notes.",
+            "Patch root cause in shared middleware/service code.",
+            "Rerun the read-only review and the targeted exploit module after patching.",
+        ],
+    },
     "port_scan": {
         "severity": "medium",
         "business_impact": "Reconnaissance exposes services that can become attack paths.",

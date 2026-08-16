@@ -203,6 +203,22 @@ KNOWLEDGE_BASE: dict[str, dict] = {
         ],
         "mitre": {"id": "T1219", "name": "Remote Access Software"},
     },
+    "bug_bounty_review": {
+        "title": "Bug Bounty Read-Only Review",
+        "what": (
+            "CyberSim performs a read-only bug bounty style triage pass. It collects "
+            "evidence for IDOR, SQL injection, XSS, and authorization design issues "
+            "without changing target state or opening a target-side incident."
+        ),
+        "vulnerability": "Defensive review of broken access control, injection, and output encoding weaknesses.",
+        "fix": [
+            "Prioritize critical authorization bypasses and high-impact IDOR first.",
+            "Patch root causes, not only individual payloads.",
+            "Create regression tests from each proof-of-concept marker.",
+            "Retest the same read-only review after fixes.",
+        ],
+        "mitre": {"id": "T1595", "name": "Active Scanning"},
+    },
     "phishing_sim": {
         "title": "Phishing Awareness Simulation",
         "what": (

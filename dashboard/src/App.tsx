@@ -15,6 +15,7 @@ import { useAttackSocket } from "./hooks/useWebSocket";
 import { AttackSelector } from "./components/AttackSelector";
 import { LaunchPanel } from "./components/LaunchPanel";
 import { LiveLogs } from "./components/LiveLogs";
+import { LiveNarrative } from "./components/LiveNarrative";
 import { ProgressBar } from "./components/ProgressBar";
 import { StatusIndicator } from "./components/StatusIndicator";
 import { AIExplainer } from "./components/AIExplainer";
@@ -254,6 +255,8 @@ export default function App() {
             <ProgressBar value={progress} />
             <div style={{ height: 12 }} />
             <LiveLogs events={events} />
+            <div style={{ height: 12 }} />
+            <LiveNarrative events={events} defense={defenseView} remediation={remediationView} />
             <div style={{ height: 12 }} />
             {reportUrl && (
               <a

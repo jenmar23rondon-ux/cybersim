@@ -147,6 +147,28 @@ GUIDES: dict[str, dict[str, Any]] = {
             "Confirm admin actions include the server-side actor ID in audit logs.",
         ],
     },
+    "bug_bounty_review": {
+        "title": "Bug Bounty Triage and Fix Plan",
+        "goal": "Turn read-only findings into prioritized fixes and regression tests.",
+        "applies_to": ["targets/mini-vulnerable-app/server.js", "backend/app/defense.py", "release checklist"],
+        "difficulty": "medium",
+        "steps": [
+            "Rank findings by exploitability and business impact.",
+            "Assign one owner per endpoint and one deadline per severity.",
+            "Patch the shared root cause instead of blocking only one payload.",
+            "Add regression tests using the exact read-only evidence markers.",
+            "Rerun Bug Bounty Read-Only Review and then targeted modules for validation.",
+        ],
+        "secure_pattern": (
+            "Bug bounty workflow:\n"
+            "finding -> severity -> owner -> root-cause patch -> regression test -> retest -> close"
+        ),
+        "verify": [
+            "Run Bug Bounty Read-Only Review again.",
+            "Expected result: critical/high findings disappear or downgrade to informational.",
+            "Confirm target_modified remains false.",
+        ],
+    },
     "brute_force": {
         "title": "Fix Weak Authentication",
         "goal": "Make repeated guessing slow, visible, and unlikely to succeed.",

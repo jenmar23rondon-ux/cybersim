@@ -246,6 +246,50 @@ SCENARIOS: dict[str, dict] = {
             },
         ],
     },
+    "bug_bounty_defensive_review": {
+        "id": "bug_bounty_defensive_review",
+        "name": "Bug Bounty Defensive Review",
+        "description": (
+            "A read-only review pass for demos where you want bug bounty style findings "
+            "without changing target state."
+        ),
+        "steps": [
+            {
+                "attack_type": "bug_bounty_review",
+                "target": "mini-vuln-app",
+                "params": {"port": 3003, "requester_id": 2},
+                "narrative": "Read-only triage: collect IDOR, SQLi, XSS, and authorization notes without modifying target data.",
+            },
+        ],
+    },
+    "expanded_malware_simulation_lab": {
+        "id": "expanded_malware_simulation_lab",
+        "name": "Expanded Malware Simulation Lab",
+        "description": (
+            "Safe malware-family telemetry for SOC practice: ransomware-like, worm-like, "
+            "spyware, cryptominer, and RAT/trojan indicators without harmful payloads."
+        ),
+        "steps": [
+            {
+                "attack_type": "malware_sim",
+                "target": "mini-vuln-app",
+                "params": {"port": 3003, "scenario": "worm_lateral_movement", "affected_hosts": 2, "simulate_exfil": "no"},
+                "narrative": "Simulate worm-like lateral movement indicators without network spread.",
+            },
+            {
+                "attack_type": "malware_sim",
+                "target": "mini-vuln-app",
+                "params": {"port": 3003, "scenario": "cryptominer_abuse", "affected_hosts": 2, "simulate_exfil": "no"},
+                "narrative": "Simulate cryptominer resource-abuse telemetry without mining.",
+            },
+            {
+                "attack_type": "rat_trojan_sim",
+                "target": "mini-vuln-app",
+                "params": {"port": 3003, "family": "spyware_collection_simulated", "affected_hosts": 2},
+                "narrative": "Simulate RAT/trojan collection and C2-style alerts without remote control.",
+            },
+        ],
+    },
 }
 
 

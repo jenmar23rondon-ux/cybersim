@@ -41,6 +41,7 @@ const ATTACK_ASSETS: Record<string, string[]> = {
   xss_advanced: ["browser", "api"],
   idor_audit: ["api", "database", "auth"],
   authz_bypass: ["api", "auth", "database"],
+  bug_bounty_review: ["api", "auth", "database", "browser"],
   ddos_sim: ["availability"],
   malware_sim: ["endpoint", "auth", "database"],
   rat_trojan_sim: ["endpoint", "auth", "network"],

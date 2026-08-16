@@ -221,7 +221,14 @@ class RatTrojanSimulation(AttackModuleBase):
             "type": "select",
             "label": "Simulation family",
             "default": "rat_simulated",
-            "options": ["rat_simulated", "trojan_loader_simulated", "keylogger_signal_simulated"],
+            "options": [
+                "rat_simulated",
+                "trojan_loader_simulated",
+                "keylogger_signal_simulated",
+                "worm_lateral_movement_simulated",
+                "spyware_collection_simulated",
+                "cryptominer_abuse_simulated",
+            ],
         },
         "affected_hosts": {"type": "int", "label": "Affected hosts", "default": 2, "max": 3},
     }
@@ -290,3 +297,91 @@ class RatTrojanSimulation(AttackModuleBase):
         }
         await emit("success", "Safe RAT/trojan drill complete: SOC telemetry generated without malware execution.", 100, result)
         return result
+
+
+@register
+class BugBountyReadOnlyReview(AttackModuleBase):
+    id = "bug_bounty_review"
+    name = "Bug Bounty Read-Only Review"
+    description = "Read-only bug bounty style triage: checks evidence for IDOR, SQLi, XSS, and authz risks without changing target state."
+    default_target = "mini-vuln-app"
+    mitre = "T1595"
+    params_schema = {
+        "scheme": {"type": "select", "label": "Target scheme", "default": "http", "options": ["http", "https"]},
+        "port": {"type": "int", "label": "Target port", "default": 3003},
+        "requester_id": {"type": "int", "label": "Requester user ID", "default": 2},
+    }
+
+    async def run(self, target: str, params: dict, emit: Emit) -> dict:
+        origin = _target_origin(target, params)
+        requester_id = int(params.get("requester_id", 2))
+        findings = []
+
+        await emit("info", "Bug bounty review started in read-only mode. No target state will be changed.", 5, {
+            "read_only": True,
+            "scope": origin,
+        })
+
+        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
+            await emit("info", "Reviewing IDOR evidence with a cross-user account read.", 18)
+            account = await client.get(f"{origin}/api/accounts/1001", headers={"x-user-id": str(requester_id)})
+            account_body = account.json()
+            if account.status_code == 200 and account_body.get("idor_vulnerable"):
+                findings.append({
+                    "category": "IDOR",
+                    "severity": "high",
+                    "endpoint": f"{origin}/api/accounts/1001",
+                    "evidence": f"Requester {requester_id} received account owned by {account_body.get('account', {}).get('owner_id')}.",
+                    "fix": "Scope account lookup by authenticated user/tenant before returning the object.",
+                })
+                await emit("success", "Bug bounty finding: IDOR evidence confirmed without modifying data.", 32)
+
+            await emit("info", "Reviewing SQLi evidence with a harmless tautology marker.", 42)
+            sqli = await client.get(f"{origin}/api/user", params={"username": "' OR 1=1--"})
+            sqli_body = sqli.json()
+            if sqli.status_code == 200 and sqli_body.get("injection_detected"):
+                findings.append({
+                    "category": "SQL Injection",
+                    "severity": "high",
+                    "endpoint": f"{origin}/api/user",
+                    "evidence": f"Injection marker changed query behavior and returned {sqli_body.get('count')} row(s).",
+                    "fix": "Use parameterized queries and remove executed SQL from responses.",
+                })
+                await emit("success", "Bug bounty finding: SQLi behavior confirmed.", 56)
+
+            await emit("info", "Reviewing reflected XSS evidence with a non-executing marker string.", 66)
+            marker = "<cybersim-xss-marker>"
+            xss = await client.get(f"{origin}/search", params={"q": marker})
+            if xss.status_code == 200 and marker in xss.text and html.escape(marker) not in xss.text:
+                findings.append({
+                    "category": "Reflected XSS",
+                    "severity": "medium",
+                    "endpoint": f"{origin}/search",
+                    "evidence": "Raw marker appeared in HTML response without output encoding.",
+                    "fix": "Escape output before rendering untrusted values in HTML.",
+                })
+                await emit("success", "Bug bounty finding: reflected XSS sink confirmed.", 78)
+
+            await emit("info", "Reviewing authorization bypass safely with a denied normal-user request only.", 86)
+            denied = await client.post(
+                f"{origin}/api/admin/approve-transfer",
+                json={"transfer_id": 501},
+                headers={"x-user-role": "user"},
+            )
+            findings.append({
+                "category": "Authorization Design",
+                "severity": "informational" if denied.status_code == 403 else "high",
+                "endpoint": f"{origin}/api/admin/approve-transfer",
+                "evidence": f"Normal-user baseline returned HTTP {denied.status_code}; full bypass test intentionally skipped in read-only mode.",
+                "fix": "Never trust client-controlled role headers; derive role from server-side identity.",
+            })
+
+        report = {
+            "success": bool(findings),
+            "read_only": True,
+            "target_modified": False,
+            "findings": findings,
+            "summary": f"{len(findings)} bug bounty note(s) collected without changing target state.",
+        }
+        await emit("success", report["summary"], 100, report)
+        return report

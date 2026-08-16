@@ -221,6 +221,7 @@ These screenshots are captured from a running CyberSim Docker lab.
 | `idor_audit` | `mini-vuln-app` | T1190 | IDOR / broken object authorization against account records |
 | `authz_bypass` | `mini-vuln-app` | T1548 | Admin action bypass caused by trusting client-controlled role data |
 | `xss_advanced` | `mini-vuln-app` | T1059.007 | Reflected and stored XSS checks with harmless lab markers |
+| `bug_bounty_review` | `mini-vuln-app` | T1595 | Read-only bug bounty triage for IDOR, SQLi, XSS, and authz notes |
 | `brute_force` | `vuln-node-api` | T1110 | HTTP or SSH credential guessing with bounded wordlists |
 | `ddos_sim` | `vuln-node-api` | T1498 | Low-rate capped load test for availability impact |
 | `sqlmap_juice` | `juice-shop` | T1190 | Conservative sqlmap profile against Juice Shop |
@@ -233,6 +234,9 @@ These screenshots are captured from a running CyberSim Docker lab.
 do not create malware, open remote-control channels, encrypt files, send
 emails, host phishing pages, or collect credentials. They are included so you
 can demonstrate SOC detection, containment, and remediation workflows safely.
+The expanded malware scenarios include ransomware-like, infostealer,
+persistence, worm-like lateral movement, spyware collection, cryptominer abuse,
+and RAT/trojan telemetry, all as safe indicators only.
 
 When these drills target `mini-vuln-app`, they also call the CyberBank API:
 
@@ -268,6 +272,8 @@ Port: 3003
 | Mini App Takeover Demo | Scan -> brute force -> SQLi -> XSS |
 | SOC Malware + Phishing Drill | Phishing simulation -> malware behavior simulation |
 | Advanced CyberBank Cloud Drill | IDOR -> authorization bypass -> SQLi -> advanced XSS -> RAT/trojan simulation |
+| Bug Bounty Defensive Review | Read-only bug bounty triage |
+| Expanded Malware Simulation Lab | Worm-like -> cryptominer -> spyware/RAT simulation |
 
 Scenarios are defined in:
 

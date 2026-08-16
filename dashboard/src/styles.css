@@ -139,6 +139,33 @@ textarea { resize: vertical; min-height: 60px; }
 .logline.error .msg { color: var(--err); }
 .logline .lvl { width: 62px; text-transform: uppercase; font-size: 10px; padding-top: 2px; }
 
+.narrative {
+  display: grid;
+  gap: 8px;
+  background: #0b131d;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+}
+.narrative-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.narrative-row span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.narrative-row strong {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
 /* AI explainer */
 .ai h3 { color: var(--accent-2); margin: 6px 0; font-size: 14px; }
 .ai .block { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
