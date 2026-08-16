@@ -206,6 +206,46 @@ SCENARIOS: dict[str, dict] = {
             },
         ],
     },
+    "advanced_cyberbank_cloud_drill": {
+        "id": "advanced_cyberbank_cloud_drill",
+        "name": "Advanced CyberBank Cloud Drill",
+        "description": (
+            "A richer Railway-ready demo against your CyberBank Docker: IDOR, "
+            "authorization bypass, SQLi, advanced XSS, and safe RAT/trojan-style SOC telemetry."
+        ),
+        "steps": [
+            {
+                "attack_type": "idor_audit",
+                "target": "mini-vuln-app",
+                "params": {"port": 3003, "requester_id": 2, "account_id": 1001},
+                "narrative": "Broken object authorization: one user reads another user's account by changing the ID.",
+            },
+            {
+                "attack_type": "authz_bypass",
+                "target": "mini-vuln-app",
+                "params": {"port": 3003, "transfer_id": 501},
+                "narrative": "Broken function authorization: client-controlled role approves an admin-only transfer.",
+            },
+            {
+                "attack_type": "sql_injection",
+                "target": "mini-vuln-app",
+                "params": {"port": 3003},
+                "narrative": "Injection: SQL-like payloads leak rows from the vulnerable user lookup.",
+            },
+            {
+                "attack_type": "xss_advanced",
+                "target": "mini-vuln-app",
+                "params": {"port": 3003},
+                "narrative": "Browser exploit class: prove reflected and stored XSS sinks with a harmless marker.",
+            },
+            {
+                "attack_type": "rat_trojan_sim",
+                "target": "mini-vuln-app",
+                "params": {"port": 3003, "family": "rat_simulated", "affected_hosts": 2},
+                "narrative": "Post-compromise drill: safe RAT/trojan telemetry opens a SOC incident without malware.",
+            },
+        ],
+    },
 }
 
 

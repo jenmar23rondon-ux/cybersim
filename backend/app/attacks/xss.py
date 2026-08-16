@@ -28,11 +28,17 @@ class Xss(AttackModuleBase):
     description = "Injects reflected-XSS payloads and detects unescaped reflection."
     default_target = "vuln-node-api"
     mitre = "T1059.007"
-    params_schema = {"port": {"type": "int", "default": 3001, "label": "Target port"}}
+    params_schema = {
+        "scheme": {"type": "select", "default": "http", "label": "Target scheme", "options": ["http", "https"]},
+        "port": {"type": "int", "default": 3001, "label": "Target port"},
+    }
 
     async def run(self, target: str, params: dict, emit: Emit) -> dict:
-        port = int(params.get("port", 3001))
-        base = f"http://{target}:{port}"
+        scheme = str(params.get("scheme", "http")).lower()
+        port = int(params.get("port", 443 if scheme == "https" else 3001))
+        default_port = 443 if scheme == "https" else 80
+        suffix = "" if port == default_port else f":{port}"
+        base = f"{scheme}://{target}{suffix}"
         reflected = []
 
         await emit("info", f"Targeting {base}/api/search", 5)

@@ -78,6 +78,66 @@ PLAYBOOKS: dict[str, dict[str, Any]] = {
             "Sanitize rich-text fields with an allowlist sanitizer.",
         ],
     },
+    "xss_advanced": {
+        "severity": "high",
+        "business_impact": "Stored or reflected script execution can lead to session abuse and content tampering.",
+        "detections": [
+            "HTML event handlers or script-like markers in query strings and comment bodies.",
+            "Stored content later rendered as raw HTML.",
+            "CSP report-only violations tied to comments/search routes.",
+        ],
+        "securewatch_query": 'source="CyberSim" attack_type="xss_advanced" level="success"',
+        "triage": [
+            "Identify whether the sink is reflected, stored, or both.",
+            "Check whether authenticated pages render the vulnerable content.",
+            "Review cookie flags and CSP coverage.",
+        ],
+        "remediation": [
+            "Escape untrusted values before HTML rendering.",
+            "Sanitize any allowed rich text with an allowlist sanitizer.",
+            "Add tests covering reflected and stored XSS markers.",
+        ],
+    },
+    "idor_audit": {
+        "severity": "high",
+        "business_impact": "Unauthorized users can read or manipulate other users' objects.",
+        "detections": [
+            "Requests where requester user ID differs from object owner ID.",
+            "Sequential account/object ID access patterns.",
+            "Successful 200 responses for objects outside the user's scope.",
+        ],
+        "securewatch_query": 'source="CyberSim" attack_type="idor_audit" level="success"',
+        "triage": [
+            "Identify the object type and owner returned.",
+            "Confirm whether writes are also vulnerable, not only reads.",
+            "Review audit logs for sequential ID enumeration.",
+        ],
+        "remediation": [
+            "Scope every object query by authenticated user or tenant.",
+            "Enforce object-level authorization in service-layer code.",
+            "Add negative tests for cross-user object access.",
+        ],
+    },
+    "authz_bypass": {
+        "severity": "critical",
+        "business_impact": "A normal user can execute privileged business actions.",
+        "detections": [
+            "Admin actions with client-supplied role or isAdmin values.",
+            "Privileged route access by non-admin authenticated users.",
+            "State changes following unexpected headers or body fields.",
+        ],
+        "securewatch_query": 'source="CyberSim" attack_type="authz_bypass" level="success"',
+        "triage": [
+            "Identify which client-controlled field influenced authorization.",
+            "List all routes that reuse the same authorization helper.",
+            "Review recent state-changing admin actions.",
+        ],
+        "remediation": [
+            "Derive roles only from trusted server-side identity context.",
+            "Centralize authorization checks for privileged routes.",
+            "Ignore client-controlled permission fields.",
+        ],
+    },
     "port_scan": {
         "severity": "medium",
         "business_impact": "Reconnaissance exposes services that can become attack paths.",
@@ -178,6 +238,27 @@ PLAYBOOKS: dict[str, dict[str, Any]] = {
             "Reimage or clean from a trusted baseline after root cause is known.",
             "Rotate exposed credentials and revoke active sessions.",
             "Restore data from clean backups and add detections for observed indicators.",
+        ],
+    },
+    "rat_trojan_sim": {
+        "severity": "critical",
+        "business_impact": "RAT/trojan behavior can enable long-term access, credential theft, and lateral movement.",
+        "detections": [
+            "C2-like beacon cadence or unusual remote-access tool activity.",
+            "Persistence alerts such as autorun, service, or scheduled task changes.",
+            "Credential-access indicators followed by outbound network activity.",
+        ],
+        "securewatch_query": 'source="CyberSim" attack_type="rat_trojan_sim" level IN ("warn","success")',
+        "triage": [
+            "Identify affected hosts, users, and first-seen timestamp.",
+            "Review process tree, network destinations, and persistence locations.",
+            "Check for credential use from unusual hosts after the alert.",
+        ],
+        "remediation": [
+            "Isolate affected hosts and preserve evidence.",
+            "Remove unauthorized remote-access tools and persistence.",
+            "Rotate credentials and revoke sessions for affected users.",
+            "Hunt for the same indicators across the fleet.",
         ],
     },
     "phishing_sim": {

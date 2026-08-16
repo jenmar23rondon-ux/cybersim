@@ -11,6 +11,17 @@ const users = [
   { id: 2, username: "ana", password: "summer2026", role: "customer", balance: 1250 },
   { id: 3, username: "demo", password: "demo", role: "auditor", balance: 500 },
 ];
+const accounts = [
+  { id: 1001, owner_id: 1, owner: "admin", type: "treasury", balance: 9800, iban: "LAB-CB-1001" },
+  { id: 1002, owner_id: 2, owner: "ana", type: "checking", balance: 1250, iban: "LAB-CB-1002" },
+  { id: 1003, owner_id: 3, owner: "demo", type: "audit", balance: 500, iban: "LAB-CB-1003" },
+];
+const transfers = [
+  { id: 501, account_id: 1002, amount: 450, status: "pending", requested_by: "ana" },
+];
+const comments = [
+  { id: 1, author: "demo", body: "Quarterly audit note: no exceptions.", at: new Date().toISOString() },
+];
 
 const auditLog = [];
 const securityEvents = [
@@ -166,6 +177,9 @@ app.get("/", (_req, res) => {
           <tr><td><code>/api/user?username=...</code></td><td>SQLi simulado con fuga de filas</td><td>SQL Injection Demonstrator</td></tr>
           <tr><td><code>/api/login</code></td><td>Password guessing sin bloqueo</td><td>Brute Force Simulator</td></tr>
           <tr><td><code>/api/search?q=...</code></td><td>Reflected XSS sin escape</td><td>XSS Payload Injector</td></tr>
+          <tr><td><code>/api/accounts/:id</code></td><td>Cuenta consultable por ID sin ownership check</td><td>IDOR Audit</td></tr>
+          <tr><td><code>/api/admin/approve-transfer</code></td><td>Confia en rol enviado por el cliente</td><td>Authorization Bypass</td></tr>
+          <tr><td><code>/api/comments</code></td><td>Comentarios renderizados sin escape</td><td>Advanced XSS</td></tr>
         </table>
       </div>
       <div class="panel wide">
@@ -316,6 +330,21 @@ app.get("/api/status", (_req, res) => {
 });
 
 app.get("/api/messages", (_req, res) => res.json({ messages }));
+app.get("/api/comments", (_req, res) => res.json({ comments }));
+app.get("/comments", (_req, res) => {
+  const rendered = comments.map((comment) => `
+    <article class="panel">
+      <strong>${comment.author}</strong>
+      <p>${comment.body}</p>
+      <small>${comment.at}</small>
+    </article>
+  `).join("");
+  res.send(page(`
+    <header><h1>CyberBank Comments</h1><a class="pill" href="/">volver</a></header>
+    <p>Laboratorio de XSS almacenado: los comentarios se renderizan sin codificacion.</p>
+    <section class="grid">${rendered}</section>
+  `));
+});
 app.get("/api/endpoints", (_req, res) => res.json({ endpoints }));
 app.get("/api/security/events", (_req, res) => res.json({ events: securityEvents.slice(-50) }));
 app.get("/api/incidents", (_req, res) => res.json({ incidents }));
@@ -361,6 +390,44 @@ app.post("/api/security/endpoint-telemetry", (req, res) => {
     details: { scenario, touched, simulated_exfiltration: simulateExfil, payload_executed: false, files_created: 0 },
   });
   const incident = createIncident("Malware behavior drill: endpoint containment", "critical", ["endpoint", "identity", "data"], [event.id]);
+  res.status(201).json({ ok: true, touched, event, incident });
+});
+
+app.post("/api/security/advanced-web-drill", (req, res) => {
+  const { category = "web", title = "Advanced web finding", severity = "high", affected = ["api"] } = req.body || {};
+  const event = recordSecurityEvent({
+    severity,
+    category,
+    title,
+    affected,
+    details: req.body || {},
+  });
+  const incident = createIncident(`Advanced web drill: ${title}`, severity, affected, [event.id]);
+  res.status(201).json({ ok: true, event, incident });
+});
+
+app.post("/api/security/rat-telemetry", (req, res) => {
+  const { family = "rat_simulated", affected_hosts = 1, c2_profile = "https beacon simulation" } = req.body || {};
+  const touched = endpoints.slice(0, Math.max(1, Math.min(Number(affected_hosts) || 1, endpoints.length)));
+  touched.forEach((endpoint) => {
+    endpoint.status = "contained";
+    endpoint.risk = 94;
+    endpoint.last_signal = `${family}: simulated c2 and persistence telemetry`;
+  });
+  const event = recordSecurityEvent({
+    severity: "critical",
+    category: "malware-simulation",
+    title: `RAT/Trojan behavior drill: ${family}`,
+    affected: "endpoint,identity,network",
+    details: {
+      safe_simulation: true,
+      payload_executed: false,
+      files_created: 0,
+      c2_profile,
+      affected_hosts: touched.map((endpoint) => endpoint.id),
+    },
+  });
+  const incident = createIncident("RAT/Trojan behavior drill: endpoint containment", "critical", ["endpoint", "identity", "network"], [event.id]);
   res.status(201).json({ ok: true, touched, event, incident });
 });
 
@@ -417,6 +484,52 @@ app.get("/api/user", (req, res) => {
     rows,
     injection_detected: injectionDetected || normalized.includes("union"),
     executed_query: executedQuery,
+  });
+});
+
+app.get("/api/accounts/:id", (req, res) => {
+  const accountId = Number(req.params.id);
+  const requesterId = Number(req.header("x-user-id") || req.query.user_id || 0);
+  const account = accounts.find((candidate) => candidate.id === accountId);
+  auditLog.push({ type: "account_lookup", accountId, requesterId, ownership_checked: false, at: new Date().toISOString() });
+  if (!account) return res.status(404).json({ error: "Account not found" });
+  res.json({
+    account,
+    requester_id: requesterId,
+    idor_vulnerable: requesterId > 0 && requesterId !== account.owner_id,
+    warning: "Lab flaw: object ownership is not checked before returning the account.",
+  });
+});
+
+app.post("/api/admin/approve-transfer", (req, res) => {
+  const clientRole = String(req.header("x-user-role") || req.body.role || "user").toLowerCase();
+  const transferId = Number(req.body.transfer_id || 501);
+  const transfer = transfers.find((candidate) => candidate.id === transferId);
+  auditLog.push({ type: "approve_transfer", transferId, clientRole, trusted_client_role: true, at: new Date().toISOString() });
+  if (!transfer) return res.status(404).json({ error: "Transfer not found" });
+  if (clientRole !== "admin" && clientRole !== "administrator") {
+    return res.status(403).json({ error: "Admin role required" });
+  }
+  transfer.status = "approved";
+  res.json({
+    success: true,
+    transfer,
+    authz_bypass_vulnerable: true,
+    warning: "Lab flaw: server trusted a client-controlled role header/body value.",
+  });
+});
+
+app.post("/api/comments", (req, res) => {
+  const body = String(req.body.body || "");
+  const author = String(req.body.author || "guest");
+  const comment = { id: comments.length + 1, author, body, at: new Date().toISOString() };
+  comments.push(comment);
+  auditLog.push({ type: "comment_created", author, contains_markup: /<[^>]+>/.test(body), at: comment.at });
+  res.status(201).json({
+    success: true,
+    comment,
+    stored_xss_possible: /<script|onerror|onload|javascript:/i.test(body),
+    warning: "Lab flaw: comment body is stored and later rendered as raw HTML.",
   });
 });
 

@@ -78,6 +78,75 @@ GUIDES: dict[str, dict[str, Any]] = {
             "View page source and confirm script tags render as text, not code.",
         ],
     },
+    "xss_advanced": {
+        "title": "Fix Reflected and Stored XSS",
+        "goal": "Ensure user-controlled content is never rendered as executable browser code.",
+        "applies_to": ["targets/mini-vulnerable-app/server.js /search", "targets/mini-vulnerable-app/server.js /comments"],
+        "difficulty": "medium",
+        "steps": [
+            "Escape values before inserting them into HTML templates.",
+            "Sanitize stored comments with an allowlist sanitizer if rich text is required.",
+            "Render comments through a template engine with auto-escaping enabled.",
+            "Add CSP and HttpOnly/SameSite cookie protections.",
+        ],
+        "secure_pattern": (
+            "const escapeHtml = (s) => String(s).replace(/[&<>\"']/g, c => ({\n"
+            "  '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;'\n"
+            "}[c]));\n"
+            "res.send(`<p>${escapeHtml(comment.body)}</p>`);"
+        ),
+        "verify": [
+            "Run Advanced XSS Audit again.",
+            "Expected result: 0 reflected/stored raw payload findings.",
+            "Open /comments and confirm the payload appears as text, not markup.",
+        ],
+    },
+    "idor_audit": {
+        "title": "Fix IDOR",
+        "goal": "Prevent users from accessing objects they do not own.",
+        "applies_to": ["targets/mini-vulnerable-app/server.js /api/accounts/:id"],
+        "difficulty": "medium",
+        "steps": [
+            "Get the authenticated user ID from trusted session/token context.",
+            "Scope object reads by both object ID and owner/tenant ID.",
+            "Return 404 or 403 for cross-user object access.",
+            "Add tests where user A requests user B's object.",
+        ],
+        "secure_pattern": (
+            "const account = accounts.find(a => a.id === accountId && a.owner_id === req.user.id);\n"
+            "if (!account) return res.status(404).json({ error: 'Account not found' });\n"
+            "res.json({ account: publicAccount(account) });"
+        ),
+        "verify": [
+            "Run IDOR Object Access Audit again.",
+            "Expected result: requester 2 cannot read account 1001.",
+            "Review logs for blocked cross-user object access.",
+        ],
+    },
+    "authz_bypass": {
+        "title": "Fix Authorization Bypass",
+        "goal": "Ensure privileged actions depend on trusted server-side authorization only.",
+        "applies_to": ["targets/mini-vulnerable-app/server.js /api/admin/approve-transfer"],
+        "difficulty": "medium",
+        "steps": [
+            "Ignore role/isAdmin values from headers, query strings, and request bodies.",
+            "Load the actor's role from the verified session or identity token.",
+            "Centralize privileged route checks in middleware.",
+            "Add negative tests proving normal users cannot approve transfers.",
+        ],
+        "secure_pattern": (
+            "function requireAdmin(req, res, next) {\n"
+            "  if (req.user?.role !== 'administrator') return res.status(403).json({ error: 'Forbidden' });\n"
+            "  next();\n"
+            "}\n"
+            "app.post('/api/admin/approve-transfer', requireAdmin, approveTransfer);"
+        ),
+        "verify": [
+            "Run Authorization Bypass Audit again.",
+            "Expected result: spoofed x-user-role: admin no longer approves the transfer.",
+            "Confirm admin actions include the server-side actor ID in audit logs.",
+        ],
+    },
     "brute_force": {
         "title": "Fix Weak Authentication",
         "goal": "Make repeated guessing slow, visible, and unlikely to succeed.",
@@ -198,6 +267,32 @@ GUIDES: dict[str, dict[str, Any]] = {
             "Run Malware Behavior Simulation again.",
             "Expected result: SOC detects the same indicators faster and containment actions are documented.",
             "Confirm no real files or payloads are created because this is a safe drill.",
+        ],
+    },
+    "rat_trojan_sim": {
+        "title": "Respond to RAT/Trojan Indicators",
+        "goal": "Contain remote-access style compromise signals and remove persistence.",
+        "applies_to": ["endpoint fleet", "EDR policy", "identity sessions", "network egress controls"],
+        "difficulty": "hard",
+        "steps": [
+            "Isolate affected hosts and preserve volatile evidence.",
+            "Review process tree, persistence locations, and outbound beacon destinations.",
+            "Remove unauthorized remote-access tooling and persistence mechanisms.",
+            "Rotate credentials and revoke sessions for affected users.",
+            "Hunt for the same indicators across endpoints and authentication logs.",
+        ],
+        "secure_pattern": (
+            "RAT response checklist:\n"
+            "1. Isolate host.\n"
+            "2. Preserve EDR/process/network evidence.\n"
+            "3. Remove persistence and unauthorized remote tools.\n"
+            "4. Rotate credentials.\n"
+            "5. Hunt and monitor for recurrence."
+        ),
+        "verify": [
+            "Run RAT/Trojan Behavior Simulation again.",
+            "Expected result: SOC opens and contains the drill incident quickly.",
+            "Confirm the drill still reports payload_executed=false and credentials_collected=0.",
         ],
     },
     "phishing_sim": {

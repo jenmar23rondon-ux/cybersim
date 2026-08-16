@@ -60,6 +60,53 @@ KNOWLEDGE_BASE: dict[str, dict] = {
         ],
         "mitre": {"id": "T1059.007", "name": "Command and Scripting Interpreter: JavaScript"},
     },
+    "xss_advanced": {
+        "title": "Advanced XSS",
+        "what": (
+            "CyberSim checks both reflected and stored XSS sinks in the CyberBank lab. "
+            "The payload is a harmless browser marker used to prove that user input "
+            "is returned or rendered as raw HTML."
+        ),
+        "vulnerability": "Unescaped reflected/stored output of untrusted HTML into browser context (CWE-79).",
+        "fix": [
+            "Encode output based on HTML/attribute/URL/script context.",
+            "Sanitize rich text with a strict allowlist sanitizer.",
+            "Use CSP to reduce script execution impact.",
+            "Add regression tests for reflected and stored XSS payload markers.",
+        ],
+        "mitre": {"id": "T1059.007", "name": "Command and Scripting Interpreter: JavaScript"},
+    },
+    "idor_audit": {
+        "title": "IDOR / Broken Object Level Authorization",
+        "what": (
+            "The attacker changes an object ID and receives another user's account "
+            "record because the server does not verify ownership before returning it."
+        ),
+        "vulnerability": "Missing object-level authorization check before data access (CWE-639).",
+        "fix": [
+            "Authorize every object read/write using the authenticated subject.",
+            "Avoid trusting user-controlled object IDs without ownership checks.",
+            "Use scoped queries such as WHERE id = ? AND owner_id = ?.",
+            "Log and alert on repeated cross-user object access attempts.",
+        ],
+        "mitre": {"id": "T1190", "name": "Exploit Public-Facing Application"},
+    },
+    "authz_bypass": {
+        "title": "Authorization Bypass",
+        "what": (
+            "The attacker performs an admin-only action by supplying a client-controlled "
+            "role value. The vulnerable server trusts that role instead of deriving it "
+            "from a verified server-side session."
+        ),
+        "vulnerability": "Broken access control caused by trusting client-side role claims (CWE-863).",
+        "fix": [
+            "Derive roles from verified server-side sessions or signed tokens.",
+            "Enforce authorization checks on every privileged route.",
+            "Ignore client-submitted role, permission, and isAdmin fields.",
+            "Add negative tests for normal users attempting admin actions.",
+        ],
+        "mitre": {"id": "T1548", "name": "Abuse Elevation Control Mechanism"},
+    },
     "port_scan": {
         "title": "Port Scanning / Service Discovery",
         "what": (
@@ -138,6 +185,23 @@ KNOWLEDGE_BASE: dict[str, dict] = {
             "Maintain tested backups and credential/session revocation procedures.",
         ],
         "mitre": {"id": "T1059", "name": "Command and Scripting Interpreter"},
+    },
+    "rat_trojan_sim": {
+        "title": "RAT/Trojan Behavior Simulation",
+        "what": (
+            "CyberSim generates safe SOC telemetry resembling RAT/trojan behaviors "
+            "such as C2-like beaconing, persistence alerts, and credential-access "
+            "signals. It does not create malware, enable remote control, collect "
+            "credentials, or modify files."
+        ),
+        "vulnerability": "Weak endpoint monitoring, missing remote-access controls, and slow containment workflow.",
+        "fix": [
+            "Detect unusual remote-access tools, beacon patterns, and persistence attempts.",
+            "Restrict admin privileges and remote-control software.",
+            "Isolate affected hosts and preserve evidence.",
+            "Rotate credentials and revoke sessions after credential-access indicators.",
+        ],
+        "mitre": {"id": "T1219", "name": "Remote Access Software"},
     },
     "phishing_sim": {
         "title": "Phishing Awareness Simulation",

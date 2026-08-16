@@ -218,23 +218,29 @@ These screenshots are captured from a running CyberSim Docker lab.
 | `port_scan` | `vuln-node-api` | T1046 | Service discovery with Nmap or TCP fallback |
 | `sql_injection` | `vuln-node-api` | T1190 | Auth bypass and data exposure through injectable input |
 | `xss` | `vuln-node-api` | T1059.007 | Reflected XSS through unescaped output |
+| `idor_audit` | `mini-vuln-app` | T1190 | IDOR / broken object authorization against account records |
+| `authz_bypass` | `mini-vuln-app` | T1548 | Admin action bypass caused by trusting client-controlled role data |
+| `xss_advanced` | `mini-vuln-app` | T1059.007 | Reflected and stored XSS checks with harmless lab markers |
 | `brute_force` | `vuln-node-api` | T1110 | HTTP or SSH credential guessing with bounded wordlists |
 | `ddos_sim` | `vuln-node-api` | T1498 | Low-rate capped load test for availability impact |
 | `sqlmap_juice` | `juice-shop` | T1190 | Conservative sqlmap profile against Juice Shop |
 | `hydra_bruteforce` | `weak-ssh` | T1110 | Hydra-based local credential audit |
 | `malware_sim` | `mini-vuln-app` | T1059 | Safe endpoint malware-behavior telemetry drill |
+| `rat_trojan_sim` | `mini-vuln-app` | T1219 | Safe RAT/trojan-style SOC telemetry drill, no malware execution |
 | `phishing_sim` | `mini-vuln-app` | T1566 | Safe phishing-awareness and user-reporting drill |
 
-`malware_sim` and `phishing_sim` are simulations only. They do not create
-malware, encrypt files, send emails, host phishing pages, or collect
-credentials. They are included so you can demonstrate SOC detection,
-containment, and remediation workflows safely.
+`malware_sim`, `rat_trojan_sim`, and `phishing_sim` are simulations only. They
+do not create malware, open remote-control channels, encrypt files, send
+emails, host phishing pages, or collect credentials. They are included so you
+can demonstrate SOC detection, containment, and remediation workflows safely.
 
 When these drills target `mini-vuln-app`, they also call the CyberBank API:
 
 ```text
 POST /api/security/phishing-drill
 POST /api/security/endpoint-telemetry
+POST /api/security/rat-telemetry
+POST /api/security/advanced-web-drill
 GET  /api/security/events
 GET  /api/incidents
 ```
@@ -261,6 +267,7 @@ Port: 3003
 | Juice Shop Two-Face Demo | Scan -> sqlmap -> bounded load test |
 | Mini App Takeover Demo | Scan -> brute force -> SQLi -> XSS |
 | SOC Malware + Phishing Drill | Phishing simulation -> malware behavior simulation |
+| Advanced CyberBank Cloud Drill | IDOR -> authorization bypass -> SQLi -> advanced XSS -> RAT/trojan simulation |
 
 Scenarios are defined in:
 

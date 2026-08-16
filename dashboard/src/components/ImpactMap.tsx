@@ -38,8 +38,12 @@ const ATTACK_ASSETS: Record<string, string[]> = {
   brute_force: ["auth"],
   hydra_bruteforce: ["auth"],
   xss: ["browser", "api"],
+  xss_advanced: ["browser", "api"],
+  idor_audit: ["api", "database", "auth"],
+  authz_bypass: ["api", "auth", "database"],
   ddos_sim: ["availability"],
   malware_sim: ["endpoint", "auth", "database"],
+  rat_trojan_sim: ["endpoint", "auth", "network"],
   phishing_sim: ["email", "auth", "browser"],
 };
 
