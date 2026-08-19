@@ -109,6 +109,33 @@ export default function App() {
     }
   }, [events.length, isCampaign, correlationId]);
 
+  useEffect(() => {
+    if (!correlationId || !launching || isCampaign) return;
+
+    let stopped = false;
+    const timer = window.setInterval(async () => {
+      try {
+        const run = await api.run(correlationId);
+        if (stopped || (run.status !== "success" && run.status !== "failed")) return;
+
+        setStatus(run.status);
+        setLaunching(false);
+        setExplanation(run.ai_explanation);
+        setActiveDefense(run.defense || null);
+        refreshHistory();
+        refreshMetrics();
+        window.clearInterval(timer);
+      } catch {
+        // WebSocket is preferred, but polling keeps the UI from staying stuck.
+      }
+    }, 3000);
+
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+    };
+  }, [correlationId, launching, isCampaign]);
+
   const refreshHistory = () => api.history().then(setHistory).catch(() => {});
   const refreshMetrics = () => api.metrics().then(setMetrics).catch(() => {});
 
