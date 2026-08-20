@@ -53,6 +53,7 @@ export default function App() {
   const [isCampaign, setIsCampaign] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connectedTarget, setConnectedTarget] = useState<{ host: string; port: number; scheme?: string } | null>(null);
+  const [runAttackId, setRunAttackId] = useState<string | null>(null);
 
   const { events, connected } = useAttackSocket(correlationId);
 
@@ -60,14 +61,14 @@ export default function App() {
     () => modules.find((m) => m.id === selectedId) || null,
     [modules, selectedId]
   );
-  const selectedPlaybook = useMemo(
-    () => playbooks.find((p) => p.attack_type === selectedId) || null,
-    [playbooks, selectedId]
+  const runPlaybook = useMemo(
+    () => playbooks.find((p) => p.attack_type === runAttackId) || null,
+    [playbooks, runAttackId]
   );
-  const defenseView = activeDefense || selectedPlaybook;
+  const defenseView = activeDefense || (launching ? runPlaybook : null);
   const remediationView = useMemo(
-    () => remediationGuides.find((g) => g.attack_type === selectedId) || null,
-    [remediationGuides, selectedId]
+    () => remediationGuides.find((g) => g.attack_type === runAttackId) || null,
+    [remediationGuides, runAttackId]
   );
   const progress = events.length ? events[events.length - 1].progress : 0;
 
@@ -142,6 +143,7 @@ export default function App() {
   const launchSingle = async (target: string, params: Record<string, any>) => {
     if (!selected) return;
     resetRunState(false);
+    setRunAttackId(selected.id);
     try {
       const res = await api.launch(selected.id, target, params);
       setCorrelationId(res.correlation_id);
@@ -155,6 +157,7 @@ export default function App() {
   const launchCampaign = async () => {
     if (!selectedScenario) return;
     resetRunState(true);
+    setRunAttackId(null);
     try {
       const res = await api.launchCampaign(selectedScenario);
       setCorrelationId(res.campaign_id);
@@ -184,7 +187,22 @@ export default function App() {
     setStatus(run.status);
     setExplanation(run.ai_explanation);
     setActiveDefense(run.defense || null);
+    setRunAttackId(run.attack_type);
     setLaunching(false);
+  };
+
+  const resetLab = () => {
+    setError(null);
+    setLaunching(false);
+    setCorrelationId(null);
+    setStatus(null);
+    setExplanation(null);
+    setActiveDefense(null);
+    setCampaign(null);
+    setIsCampaign(false);
+    setRunAttackId(null);
+    refreshHistory();
+    refreshMetrics();
   };
 
   const reportUrl = isCampaign && correlationId
@@ -203,6 +221,7 @@ export default function App() {
           {connected ? "WebSocket live" : "WebSocket idle"}
         </span>
         <PWAInstall />
+        <button className="btn ghost compact" type="button" onClick={resetLab}>Reset lab</button>
         <span className="badge-lab">LOCAL LAB ONLY</span>
       </div>
 
@@ -222,7 +241,7 @@ export default function App() {
         metrics={metrics}
         history={history}
         events={events}
-        selectedAttack={selectedId}
+        selectedAttack={runAttackId || selectedId}
         defense={defenseView}
         campaign={campaign}
         isCampaign={isCampaign}
@@ -250,6 +269,7 @@ export default function App() {
               <AttackSelector modules={modules} selected={selectedId} onSelect={(id) => {
                 setSelectedId(id);
                 setActiveDefense(null);
+                setRunAttackId(null);
               }} />
               <div style={{ height: 16 }} />
               <LaunchPanel

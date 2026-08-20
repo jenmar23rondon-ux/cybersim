@@ -13,7 +13,12 @@ export function useAttackSocket(correlationId: string | null) {
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    if (!correlationId) return;
+    if (!correlationId) {
+      setEvents([]);
+      setConnected(false);
+      wsRef.current?.close();
+      return;
+    }
     setEvents([]);
     let closedByUs = false;
 
