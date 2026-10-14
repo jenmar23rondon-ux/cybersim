@@ -18,6 +18,7 @@ interface Props {
   defense: DefensePlaybook | DefenseSummary | null;
   campaign: Campaign | null;
   isCampaign: boolean;
+  campaignRuns: AttackRun[];
 }
 
 const ASSETS = [
@@ -48,10 +49,10 @@ const ATTACK_ASSETS: Record<string, string[]> = {
   phishing_sim: ["email", "auth", "browser"],
 };
 
-export function ImpactMap({ metrics, history, events, selectedAttack, defense, campaign, isCampaign }: Props) {
-  const activeAttacks = getActiveAttacks({ selectedAttack, events, campaign, isCampaign });
+export function ImpactMap({ metrics, history, events, selectedAttack, defense, campaign, campaignRuns, isCampaign }: Props) {
+  const activeAttacks = getActiveAttacks({ selectedAttack, events, defense, campaign, campaignRuns, isCampaign });
   const confirmedAttacks = new Set(
-    activeAttacks.filter((item) => item.status === "success").map((item) => item.attack)
+    activeAttacks.filter((item) => item.confirmed).map((item) => item.attack)
   );
   const watchedAttacks = new Set(activeAttacks.map((item) => item.attack));
   const affectedAssetIds = new Set<string>();
@@ -179,13 +180,18 @@ function getActiveAttacks({
   events,
   campaign,
   isCampaign,
-}: Pick<Props, "selectedAttack" | "events" | "campaign" | "isCampaign">) {
+  defense,
+  campaignRuns,
+}: Pick<Props, "selectedAttack" | "events" | "campaign" | "isCampaign" | "defense" | "campaignRuns">) {
   if (isCampaign && campaign?.steps?.length) {
-    return campaign.steps.map((step) => ({ attack: step.attack_type, status: step.status }));
+    return campaign.steps.filter((step) => step.status !== "pending").map((step) => ({
+      attack: step.attack_type,
+      confirmed: campaignRuns.find((run) => run.correlation_id === step.correlation_id)?.defense?.confirmed || false,
+    }));
   }
+  const confirmed = defense && "confirmed" in defense ? defense.confirmed : false;
   if (events.length) {
-    const final = events.find((event) => event.data?.final);
-    return [{ attack: events[0].attack_type, status: final?.data?.status || "running" }];
+    return [{ attack: events[0].attack_type, confirmed }];
   }
-  return selectedAttack ? [{ attack: selectedAttack, status: "prepared" }] : [];
+  return selectedAttack ? [{ attack: selectedAttack, confirmed }] : [];
 }

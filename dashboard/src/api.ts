@@ -1,7 +1,14 @@
-import type { AttackModule, AttackRun, Campaign, DefensePlaybook, Metrics, RemediationGuide, Scenario, TargetProbe } from "./types";
+import type { AttackModule, AttackRun, Campaign, DefensePlaybook, LabBoundary, Metrics, RemediationGuide, Scenario, TargetProbe } from "./types";
 
 export const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/$/, "");
 export const WS_URL = (import.meta.env.VITE_WS_URL || API_URL.replace(/^http/, "ws")).replace(/\/$/, "");
+
+function sessionQuery(boundary: LabBoundary | null) {
+  return boundary ? `?${new URLSearchParams({
+    after_run_id: String(boundary.after_run_id),
+    after_campaign_id: String(boundary.after_campaign_id),
+  })}` : "";
+}
 
 async function j<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -28,7 +35,9 @@ async function request<T>(input: RequestInfo | URL, init?: RequestInit): Promise
 export const api = {
   modules: () => request<AttackModule[]>(`${API_URL}/api/modules`),
 
-  metrics: () => request<Metrics>(`${API_URL}/api/metrics`),
+  metrics: (boundary: LabBoundary | null = null) => request<Metrics>(`${API_URL}/api/metrics${sessionQuery(boundary)}`),
+
+  labBaseline: () => request<LabBoundary>(`${API_URL}/api/lab/baseline`),
 
   playbooks: () => request<DefensePlaybook[]>(`${API_URL}/api/defense/playbooks`),
 
@@ -49,7 +58,7 @@ export const api = {
       body: JSON.stringify({ attack_type, target, params }),
     }),
 
-  history: () => request<AttackRun[]>(`${API_URL}/api/attacks`),
+  history: (boundary: LabBoundary | null = null) => request<AttackRun[]>(`${API_URL}/api/attacks${sessionQuery(boundary)}`),
 
   run: (id: string) => request<AttackRun>(`${API_URL}/api/attacks/${id}`),
 

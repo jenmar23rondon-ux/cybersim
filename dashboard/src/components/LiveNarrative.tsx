@@ -21,7 +21,7 @@ const ATTACK_LABELS: Record<string, string> = {
 export function LiveNarrative({ events, defense, remediation }: Props) {
   const latest = events[events.length - 1];
   const first = events[0];
-  const attack = first?.attack_type || defense?.attack_type || remediation?.attack_type || "";
+  const attack = defense?.attack_type || latest?.attack_type || first?.attack_type || remediation?.attack_type || "";
   const successes = events.filter((event) => event.level === "success");
   const warnings = events.filter((event) => event.level === "warn");
   const final = events.find((event) => event.data?.final);
@@ -32,7 +32,9 @@ export function LiveNarrative({ events, defense, remediation }: Props) {
       ? latest.message
       : "Esperando eventos para narrar el ataque paso a paso.";
 
-  const evidence = successes[successes.length - 1]?.message || warnings[warnings.length - 1]?.message || "Aun no hay evidencia confirmada.";
+  const review = defense && "analyst_review" in defense ? defense.analyst_review : null;
+  const evidence = review?.note || successes.filter((event) => !event.data?.final).slice(-1)[0]?.message
+    || warnings[warnings.length - 1]?.message || "Aun no hay evidencia confirmada.";
   const reinforce = remediation?.steps?.[0] || defense?.remediation?.[0] || "Cuando termine la prueba, aplica el plan de remediacion recomendado.";
 
   return (

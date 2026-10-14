@@ -9,17 +9,18 @@ from __future__ import annotations
 import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 import httpx
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from .attacks import REGISTRY
 from .campaign import create_campaign, execute_campaign
 from .database import SessionLocal, init_db
 from .defense import build_metrics, enrich_run, list_playbooks, playbook_for
 from .engine import create_run, execute_run
+from .lab_session import session_queries
 from .models import AttackRun, Campaign
 from .report import build_campaign_report, build_report
 from .remediation import guide_for, list_guides
@@ -89,8 +90,18 @@ async def defense_playbook(attack_type: str):
 
 
 @app.get("/api/metrics")
-async def metrics():
-    return await build_metrics()
+async def metrics(after_run_id: int = Query(0, ge=0), after_campaign_id: int = Query(0, ge=0)):
+    return await build_metrics(after_run_id, after_campaign_id)
+
+
+@app.get("/api/lab/baseline")
+async def lab_baseline():
+    async with SessionLocal() as s:
+        row = (await s.execute(select(
+            select(func.max(AttackRun.id)).scalar_subquery(),
+            select(func.max(Campaign.id)).scalar_subquery(),
+        ))).one()
+    return {"after_run_id": row[0] or 0, "after_campaign_id": row[1] or 0}
 
 
 @app.get("/api/remediation/guides")
@@ -205,10 +216,12 @@ async def launch_attack(req: AttackRequest):
 
 
 @app.get("/api/attacks")
-async def list_runs(limit: int = 50):
+async def list_runs(limit: int = Query(50, ge=1, le=500),
+                    after_run_id: int = Query(0, ge=0), after_campaign_id: int = Query(0, ge=0)):
+    query, _ = session_queries(after_run_id, after_campaign_id)
     async with SessionLocal() as s:
         rows = (await s.execute(
-            select(AttackRun).order_by(AttackRun.id.desc()).limit(limit)
+            query.order_by(AttackRun.id.desc()).limit(limit)
         )).scalars().all()
         return [enrich_run(r.to_dict()) for r in rows]
 

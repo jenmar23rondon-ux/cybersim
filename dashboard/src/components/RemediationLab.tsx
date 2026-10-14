@@ -5,7 +5,7 @@ export function RemediationLab({ guide }: { guide: RemediationGuide | null }) {
     return (
       <div className="panel remediation">
         <h2>Remediation Lab</h2>
-        <p className="muted">Select or open an attack to see the fix plan and validation checklist.</p>
+        <p className="muted">Sin resultados de una prueba ejecutada para mostrar el plan de corrección.</p>
       </div>
     );
   }

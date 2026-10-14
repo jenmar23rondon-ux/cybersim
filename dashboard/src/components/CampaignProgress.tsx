@@ -1,4 +1,5 @@
-import type { Campaign } from "../types";
+import type { AttackRun, Campaign } from "../types";
+import { AnalystReview } from "./AnalystReview";
 
 const ICON: Record<string, string> = {
   pending: "O",
@@ -7,7 +8,7 @@ const ICON: Record<string, string> = {
   failed: "X",
 };
 
-export function CampaignProgress({ campaign }: { campaign: Campaign | null }) {
+export function CampaignProgress({ campaign, runs }: { campaign: Campaign | null; runs: AttackRun[] }) {
   if (!campaign) {
     return <p className="muted">Launch a scenario to see step-by-step progress here.</p>;
   }
@@ -27,6 +28,9 @@ export function CampaignProgress({ campaign }: { campaign: Campaign | null }) {
                 {s.attack_type} to {s.target}
               </div>
               <div className="cnarr">{s.narrative}</div>
+              {runs.find((run) => run.correlation_id === s.correlation_id)?.defense?.analyst_review && (
+                <AnalystReview review={runs.find((run) => run.correlation_id === s.correlation_id)!.defense!.analyst_review} />
+              )}
             </div>
             <div className="spacer" />
             <span className={`pill ${s.status === "pending" ? "running" : s.status}`}>

@@ -42,6 +42,20 @@ export interface DefenseSummary extends DefensePlaybook {
   confirmed: boolean;
   log_level_counts: Record<string, number>;
   event_count: number;
+  analyst_review: AnalystReview;
+}
+
+export interface AnalystReview {
+  log_source: string;
+  event_reference: string;
+  decision: "cerrar como false positive" | "cerrar como benign" | "escalar" | null;
+  note: string;
+  outcome: "finding" | "simulation" | "observation" | "no_finding" | "inconclusive" | "pending";
+}
+
+export interface LabBoundary {
+  after_run_id: number;
+  after_campaign_id: number;
 }
 
 export interface RemediationGuide {

@@ -10,9 +10,12 @@ import { WS_URL } from "../api";
 export function useAttackSocket(correlationId: string | null) {
   const [events, setEvents] = useState<LogEvent[]>([]);
   const [connected, setConnected] = useState(false);
+  const [scope, setScope] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
+    setScope(correlationId);
+    setConnected(false);
     if (!correlationId) {
       setEvents([]);
       setConnected(false);
@@ -21,16 +24,20 @@ export function useAttackSocket(correlationId: string | null) {
     }
     setEvents([]);
     let closedByUs = false;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 
     const connect = () => {
+      if (closedByUs) return;
       const ws = new WebSocket(`${WS_URL}/ws/${correlationId}`);
       wsRef.current = ws;
-      ws.onopen = () => setConnected(true);
+      ws.onopen = () => { if (!closedByUs) setConnected(true); };
       ws.onclose = () => {
+        if (closedByUs) return;
         setConnected(false);
-        if (!closedByUs) setTimeout(connect, 1000);
+        reconnectTimer = setTimeout(connect, 1000);
       };
       ws.onmessage = (msg) => {
+        if (closedByUs) return;
         try {
           const ev = JSON.parse(msg.data) as LogEvent;
           setEvents((prev) => [...prev, ev]);
@@ -43,9 +50,10 @@ export function useAttackSocket(correlationId: string | null) {
 
     return () => {
       closedByUs = true;
+      clearTimeout(reconnectTimer);
       wsRef.current?.close();
     };
   }, [correlationId]);
 
-  return { events, connected };
+  return { events: scope === correlationId ? events : [], connected: scope === correlationId && connected };
 }

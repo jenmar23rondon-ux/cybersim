@@ -1,38 +1,46 @@
 import type { DefensePlaybook, DefenseSummary } from "../types";
+import { AnalystReview } from "./AnalystReview";
 
 interface Props {
   playbook: DefensePlaybook | DefenseSummary | null;
+  attackName?: string;
+  running?: boolean;
 }
 
-export function DefensePanel({ playbook }: Props) {
+export function DefensePanel({ playbook, attackName, running }: Props) {
   if (!playbook) {
     return (
       <div className="panel">
         <h2>Detection Lab</h2>
-        <p className="muted">Select an attack to load SOC detection logic and remediation guidance.</p>
+        <p className="muted">{attackName ? `Aún no se ha ejecutado ${attackName} en esta sesión.` : "Sin pruebas ejecutadas en esta sesión."}</p>
       </div>
     );
   }
 
   const confirmed = "confirmed" in playbook ? playbook.confirmed : false;
   const events = "event_count" in playbook ? playbook.event_count : null;
+  const review = "analyst_review" in playbook ? playbook.analyst_review : null;
+  const outcomeLabels = {
+    finding: "Hallazgo con evidencia", simulation: "Simulación", observation: "Observación",
+    no_finding: "Sin hallazgo", inconclusive: "Inconcluso", pending: "En curso",
+  };
 
   return (
     <div className="panel defense">
       <div className="section-title">
-        <h2>Detection Lab</h2>
+        <h2>Detection Lab{attackName ? ` · ${attackName}` : ""}</h2>
         <div className="spacer" />
-        <span className={`severity ${playbook.severity}`}>{playbook.severity}</span>
+        {confirmed && <span className={`severity ${playbook.severity}`}>{playbook.severity}</span>}
       </div>
 
       <div className="risk-row">
         <div>
           <span className="muted">Risk score</span>
-          <strong>{playbook.risk_score}/100</strong>
+          <strong>{running ? "Pendiente" : `${playbook.risk_score}/100`}</strong>
         </div>
         <div>
           <span className="muted">Finding</span>
-          <strong>{confirmed ? "Confirmed" : "Prepared"}</strong>
+          <strong>{running ? "En curso" : review ? outcomeLabels[review.outcome] : "Pendiente de revisión"}</strong>
         </div>
         {events !== null && (
           <div>
@@ -41,6 +49,8 @@ export function DefensePanel({ playbook }: Props) {
           </div>
         )}
       </div>
+
+      {review && <AnalystReview review={review} />}
 
       <div className="block">
         <strong>Business impact</strong>

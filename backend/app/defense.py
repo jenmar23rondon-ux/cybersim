@@ -11,10 +11,9 @@ from collections import Counter
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import select
-
 from .database import SessionLocal
-from .models import AttackRun, Campaign
+from .analyst import analyst_review
+from .lab_session import session_queries
 
 
 PLAYBOOKS: dict[str, dict[str, Any]] = {
@@ -326,12 +325,14 @@ def playbook_for(attack_type: str) -> dict[str, Any]:
 def enrich_run(run: dict[str, Any]) -> dict[str, Any]:
     pb = playbook_for(run["attack_type"])
     log_levels = Counter((event.get("level") or "info") for event in run.get("logs") or [])
-    confirmed = run.get("status") == "success"
+    review = analyst_review(run)
+    confirmed = review["outcome"] == "finding"
     score = pb["risk_score"] + (10 if confirmed else 0)
     run["defense"] = {
         **pb,
         "confirmed": confirmed,
-        "risk_score": min(score, 100),
+        "risk_score": min(score, 100) if review["outcome"] in {"finding", "inconclusive"} else 0,
+        "analyst_review": review,
         "log_level_counts": dict(log_levels),
         "event_count": len(run.get("logs") or []),
     }
@@ -342,14 +343,15 @@ async def list_playbooks() -> list[dict[str, Any]]:
     return [playbook_for(k) for k in sorted(PLAYBOOKS)]
 
 
-async def build_metrics() -> dict[str, Any]:
+async def build_metrics(after_run_id: int = 0, after_campaign_id: int = 0) -> dict[str, Any]:
+    run_query, campaign_query = session_queries(after_run_id, after_campaign_id)
     async with SessionLocal() as s:
-        runs = (await s.execute(select(AttackRun))).scalars().all()
-        campaigns = (await s.execute(select(Campaign))).scalars().all()
+        runs = (await s.execute(run_query)).scalars().all()
+        campaigns = (await s.execute(campaign_query)).scalars().all()
 
     status_counts = Counter(r.status for r in runs)
     attack_counts = Counter(r.attack_type for r in runs)
-    confirmed = [r for r in runs if r.status == "success"]
+    confirmed = [r for r in runs if enrich_run(r.to_dict())["defense"]["confirmed"]]
     scores = [enrich_run(r.to_dict())["defense"]["risk_score"] for r in runs]
     recent = sorted(runs, key=lambda r: r.started_at or datetime.min.replace(tzinfo=timezone.utc), reverse=True)[:8]
 
