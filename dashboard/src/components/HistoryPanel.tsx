@@ -19,9 +19,9 @@ export function HistoryPanel({ runs, onOpen, disabled, onReset, resetting, reset
         <h2 id="history-title">Attack History</h2>
         <button className="btn ghost compact history-reset" type="button" onClick={onReset}
           disabled={resetDisabled} aria-busy={resetting}
-          title={disabled && !resetting ? "Espera a que termine la prueba en curso" : "Reiniciar los informes visibles de esta sesión"}>
+          title={disabled && !resetting ? "Wait for the current test to finish" : "Reset the reports shown in this session"}>
           <RotateCcw size={16} aria-hidden="true" />
-          {resetting ? "Reiniciando..." : "Reiniciar informes"}
+          {resetting ? "Resetting..." : "Reset reports"}
         </button>
       </div>
       {notice && <p className={`history-notice ${notice.error ? "error" : ""}`} role={notice.error ? "alert" : "status"}>{notice.text}</p>}
