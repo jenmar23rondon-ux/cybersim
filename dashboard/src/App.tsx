@@ -44,6 +44,7 @@ export default function App() {
   const [isCampaign, setIsCampaign] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [historyNotice, setHistoryNotice] = useState<{ text: string; error?: boolean } | null>(null);
   const [resetting, setResetting] = useState(false);
   const [boundary, setBoundary] = useState<LabBoundary | null>(readLabBoundary);
   const [formVersion, setFormVersion] = useState(0);
@@ -163,6 +164,7 @@ export default function App() {
     setCorrelationId(null);
     setError(null);
     setNotice(null);
+    setHistoryNotice(null);
     setStatus(null);
     setActiveRun(null);
     setRunAttackId(null);
@@ -216,8 +218,12 @@ export default function App() {
     setRunAttackId(run.attack_type);
     setLaunching(run.status === "running");
   };
-  const resetLab = async () => {
-    const message = "¿Reiniciar la sesión del laboratorio? Se pondrán en cero los contadores, el historial visible y los paneles. "
+  const resetLab = async (scope: "lab" | "reports" = "lab") => {
+    if (resetting || (scope === "reports" && launching)) return;
+    const reportsOnly = scope === "reports";
+    const message = (reportsOnly
+      ? "¿Reiniciar los informes? Se vaciarán el historial visible, sus contadores y los resultados abiertos para mostrar los informes nuevos. La configuración de la prueba se conservará. "
+      : "¿Reiniciar la sesión del laboratorio? Se pondrán en cero los contadores, el historial visible y los paneles. ")
       + "Los informes anteriores seguirán guardados."
       + (launching ? " La prueba en curso seguirá ejecutándose en el backend." : "");
     if (!window.confirm(message)) return;
@@ -229,13 +235,18 @@ export default function App() {
       setBoundary(next);
       setHistory([]);
       setMetrics(null);
-      setMode("single");
-      setSelectedId(null);
-      setSelectedScenario(null);
-      setFormVersion((value) => value + 1);
-      setNotice("Sesión reiniciada. Contadores y resultados en cero; los informes anteriores siguen guardados.");
+      if (reportsOnly) {
+        setHistoryNotice({ text: "Informes reiniciados. Los nuevos resultados aparecerán aquí; los PDF anteriores siguen guardados." });
+      } else {
+        setMode("single");
+        setSelectedId(null);
+        setSelectedScenario(null);
+        setFormVersion((value) => value + 1);
+        setNotice("Sesión reiniciada. Contadores y resultados en cero; los informes anteriores siguen guardados.");
+      }
     } catch (e: any) {
-      setError(`No se pudo reiniciar la sesión: ${e.message || String(e)}`);
+      if (reportsOnly) setHistoryNotice({ text: `No se pudieron reiniciar los informes: ${e.message || String(e)}`, error: true });
+      else setError(`No se pudo reiniciar la sesión: ${e.message || String(e)}`);
     } finally { setResetting(false); }
   };
   const reportUrl = correlationId ? isCampaign ? api.campaignReportUrl(correlationId)
@@ -249,7 +260,7 @@ export default function App() {
         <span className="tag"><span className={`dot ${connected ? "on" : "off"}`} />
           {connected ? "WebSocket live" : "WebSocket idle"}</span>
         <PWAInstall />
-        <button className="btn ghost compact reset-btn" type="button" onClick={resetLab} disabled={resetting || (launching && !correlationId)}
+        <button className="btn ghost compact reset-btn" type="button" onClick={() => resetLab()} disabled={resetting || (launching && !correlationId)}
           title="Reiniciar la sesión del laboratorio">
           <RotateCcw size={16} aria-hidden="true" /> {resetting ? "Reiniciando..." : "Reset lab"}
         </button>
@@ -303,7 +314,8 @@ export default function App() {
           <div style={{ height: 16 }} /><RemediationLab guide={remediationView} />
         </div>
       </div>
-      <div style={{ height: 16 }} /><HistoryPanel runs={history} onOpen={openHistory} disabled={launching || resetting} />
+      <div style={{ height: 16 }} /><HistoryPanel runs={history} onOpen={openHistory} disabled={launching || resetting}
+        onReset={() => resetLab("reports")} resetting={resetting} resetDisabled={launching || resetting} notice={historyNotice} />
       <p className="muted" style={{ textAlign: "center", marginTop: 20 }}>
         CyberSim - For authorized security education and defensive testing only - All attacks confined to isolated Docker containers.
       </p>

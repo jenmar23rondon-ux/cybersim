@@ -127,6 +127,12 @@ textarea { resize: vertical; min-height: 60px; }
 .analyst-escalate { color: var(--warn); font-weight: 700; }
 .history-open { flex: 1; min-width: 0; text-align: left; color: inherit; font: inherit; border: 0; background: none; padding: 0; cursor: pointer; overflow-wrap: anywhere; }
 .history-open:disabled { cursor: default; opacity: .65; }
+.history-heading { flex-wrap: wrap; justify-content: space-between; }
+.history-heading h2 { margin: 0; }
+.history-heading .history-reset { width: auto; display: inline-flex; align-items: center; gap: 8px; letter-spacing: 0; }
+.history-notice { color: var(--ok); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.history-notice.error { color: var(--err); }
+.history-reset:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 .history-open:focus-visible, .reset-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 .defense .section-title h2 { line-height: 1.45; overflow-wrap: anywhere; }
 .risk-row strong { overflow-wrap: anywhere; }
