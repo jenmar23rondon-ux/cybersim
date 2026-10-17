@@ -217,16 +217,17 @@ export default function App() {
     setActiveRun(run);
     setRunAttackId(run.attack_type);
     setLaunching(run.status === "running");
+    window.requestAnimationFrame(() => document.getElementById("run-results")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
-  const resetLab = async (scope: "lab" | "reports" = "lab") => {
-    if (resetting || (scope === "reports" && launching)) return;
+  const resetLab = async (scope: "lab" | "reports" = "lab"): Promise<boolean> => {
+    if (resetting || (scope === "reports" && launching)) return false;
     const reportsOnly = scope === "reports";
     const message = (reportsOnly
       ? "¿Reiniciar los informes? Se vaciarán el historial visible, sus contadores y los resultados abiertos para mostrar los informes nuevos. La configuración de la prueba se conservará. "
       : "¿Reiniciar la sesión del laboratorio? Se pondrán en cero los contadores, el historial visible y los paneles. ")
       + "Los informes anteriores seguirán guardados."
       + (launching ? " La prueba en curso seguirá ejecutándose en el backend." : "");
-    if (!window.confirm(message)) return;
+    if (!window.confirm(message)) return false;
     setResetting(true);
     try {
       const next = await api.labBaseline();
@@ -244,9 +245,11 @@ export default function App() {
         setFormVersion((value) => value + 1);
         setNotice("Sesión reiniciada. Contadores y resultados en cero; los informes anteriores siguen guardados.");
       }
+      return true;
     } catch (e: any) {
       if (reportsOnly) setHistoryNotice({ text: `No se pudieron reiniciar los informes: ${e.message || String(e)}`, error: true });
       else setError(`No se pudo reiniciar la sesión: ${e.message || String(e)}`);
+      return false;
     } finally { setResetting(false); }
   };
   const reportUrl = correlationId ? isCampaign ? api.campaignReportUrl(correlationId)
@@ -291,7 +294,7 @@ export default function App() {
             onSelect={setSelectedScenario} onLaunch={launchCampaign} />}
         </div>
         <div>
-          <div className="panel">
+          <div className="panel" id="run-results">
             <div className="section-title">
               <h2 style={{ margin: 0 }}>Live {isCampaign ? "Campaign" : "Attack"}</h2>
               <div className="spacer" /><StatusIndicator status={status} />
@@ -314,7 +317,8 @@ export default function App() {
           <div style={{ height: 16 }} /><RemediationLab guide={remediationView} />
         </div>
       </div>
-      <div style={{ height: 16 }} /><HistoryPanel runs={history} onOpen={openHistory} disabled={launching || resetting}
+      <div style={{ height: 16 }} /><HistoryPanel key={formVersion} runs={history} onOpen={openHistory} disabled={launching || resetting}
+        onRefresh={() => Promise.all([refreshHistory(), refreshMetrics()])}
         onReset={() => resetLab("reports")} resetting={resetting} resetDisabled={launching || resetting} notice={historyNotice} />
       <p className="muted" style={{ textAlign: "center", marginTop: 20 }}>
         CyberSim - For authorized security education and defensive testing only - All attacks confined to isolated Docker containers.
